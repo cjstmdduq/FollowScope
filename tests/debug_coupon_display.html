@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Coupon Display Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .debug-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .coupon-data {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .status-ok { color: green; }
+        .status-error { color: red; }
+        .status-warning { color: orange; }
+    </style>
+</head>
+<body>
+    <h1>Coupon Display Debug</h1>
+    
+    <div class="debug-section">
+        <h2>1. API Connection Test</h2>
+        <p id="api-status">Testing API connection...</p>
+    </div>
+    
+    <div class="debug-section">
+        <h2>2. Coupon Data</h2>
+        <p id="coupon-count">Checking coupon data...</p>
+        <div id="coupon-data" class="coupon-data"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>3. Display Test</h2>
+        <p>Testing how coupons would be displayed:</p>
+        <div id="coupon-display"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>4. Console Errors</h2>
+        <div id="console-errors" class="coupon-data"></div>
+    </div>
+
+    <script>
+        // Capture console errors
+        let consoleErrors = [];
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            consoleErrors.push({
+                message: msg,
+                source: url,
+                line: lineNo,
+                column: columnNo,
+                error: error
+            });
+            updateConsoleErrors();
+            return false;
+        };
+        
+        function updateConsoleErrors() {
+            const errorsDiv = document.getElementById('console-errors');
+            if (consoleErrors.length === 0) {
+                errorsDiv.innerHTML = '<span class="status-ok">No JavaScript errors detected</span>';
+            } else {
+                errorsDiv.innerHTML = consoleErrors.map(err => 
+                    `<span class="status-error">Error: ${err.message} at ${err.source}:${err.line}:${err.column}</span>`
+                ).join('\n');
+            }
+        }
+        
+        // Test API and display coupons
+        async function testCouponSystem() {
+            const apiStatus = document.getElementById('api-status');
+            const couponCount = document.getElementById('coupon-count');
+            const couponDataDiv = document.getElementById('coupon-data');
+            const displayDiv = document.getElementById('coupon-display');
+            
+            try {
+                // Test API connection
+                apiStatus.innerHTML = 'Connecting to API...';
+                const response = await fetch('http://localhost:8080/api/coupons');
+                
+                if (!response.ok) {
+                    throw new Error(`API returned status ${response.status}`);
+                }
+                
+                apiStatus.innerHTML = '<span class="status-ok">✓ API connection successful</span>';
+                
+                // Get coupon data
+                const couponData = await response.json();
+                couponCount.innerHTML = `<span class="status-ok">Found ${couponData.length} coupons</span>`;
+                
+                // Display raw data
+                couponDataDiv.textContent = JSON.stringify(couponData, null, 2);
+                
+                // Test display logic
+                if (couponData.length > 0) {
+                    displayTestCoupons(couponData, displayDiv);
+                } else {
+                    displayDiv.innerHTML = '<span class="status-warning">No coupons to display</span>';
+                }
+                
+            } catch (error) {
+                apiStatus.innerHTML = `<span class="status-error">✗ API Error: ${error.message}</span>`;
+                console.error('API Error:', error);
+            }
+            
+            updateConsoleErrors();
+        }
+        
+        function displayTestCoupons(couponData, container) {
+            container.innerHTML = '<h3>Coupon Display Preview:</h3>';
+            
+            // Group by competitor
+            const couponsByCompetitor = {};
+            const today = new Date().toISOString().split('T')[0];
+            
+            couponData.forEach(coupon => {
+                // Determine status
+                let status = 'active';
+                if (coupon.start_date && coupon.start_date > today) {
+                    status = 'upcoming';
+                } else if (coupon.end_date && coupon.end_date < today) {
+                    status = 'expired';
+                }
+                coupon.status = status;
+                
+                if (!couponsByCompetitor[coupon.competitor]) {
+                    couponsByCompetitor[coupon.competitor] = [];
+                }
+                couponsByCompetitor[coupon.competitor].push(coupon);
+            });
+            
+            // Display grouped coupons
+            Object.entries(couponsByCompetitor).forEach(([competitor, coupons]) => {
+                const section = document.createElement('div');
+                section.style.marginBottom = '20px';
+                section.style.padding = '15px';
+                section.style.border = '1px solid #ddd';
+                section.style.borderRadius = '8px';
+                
+                section.innerHTML = `
+                    <h4>${competitor} (${coupons.length} coupons)</h4>
+                    ${coupons.map(coupon => `
+                        <div style="margin: 10px 0; padding: 10px; background: #f9f9f9; border-radius: 4px;">
+                            <strong>${coupon.coupon_name}</strong> - ${coupon.discount_rate}
+                            <br>Status: <span class="status-${coupon.status === 'active' ? 'ok' : coupon.status === 'upcoming' ? 'warning' : 'error'}">${coupon.status}</span>
+                            <br>Period: ${coupon.start_date || 'N/A'} ~ ${coupon.end_date || 'N/A'}
+                            ${coupon.min_purchase ? `<br>Min purchase: ${coupon.min_purchase}` : ''}
+                            ${coupon.description ? `<br>Description: ${coupon.description}` : ''}
+                        </div>
+                    `).join('')}
+                `;
+                
+                container.appendChild(section);
+            });
+        }
+        
+        // Run test on page load
+        window.onload = function() {
+            testCouponSystem();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">제품 비교</h3>
+            <ul class="sidebar-menu">
+                <li>
+                    <button class="sidebar-btn active" onclick="showTab('overview')">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>전체 개요</span>
+                    </button>
+                </li>
+                <li>
+                    <button class="sidebar-btn" onclick="showTab('comparison')">
+                        <i class="fas fa-balance-scale"></i>
+                        <span>경쟁사 비교</span>
+                    </button>
+                </li>
+                <li>
+                    <button class="sidebar-btn" onclick="showTab('heatmap')">
+                        <i class="fas fa-th"></i>
+                        <span>가격 히트맵</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">프로모션/이벤트</h3>
+            <ul class="sidebar-menu">
+                <li>
+                    <button class="sidebar-btn" onclick="showTab('calendar')">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>라이브캘린더</span>
+                    </button>
+                </li>
+                <li>
+                    <button class="sidebar-btn" onclick="showTab('coupons')">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>쿠폰 현황</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">리뷰 분석</h3>
+            <ul class="sidebar-menu">
+                <li>
+                    <button class="sidebar-btn" onclick="showTab('review-trends')">
+                        <i class="fas fa-chart-line"></i>
+                        <span>리뷰 추이 분석</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Quick Links Sidebar -->
+    <div id="quickLinksPanel" class="sidebar quick-links-sidebar">
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">퀵링크</h3>
+            <div id="quickLinksCategories">
+                <!-- Categories will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Tab Contents -->
+        <div class="tab-content">
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-pane active">
+            <div class="section-header">
+                <h2>전체 개요</h2>
+                <p>모든 경쟁사의 가격 경쟁력을 한눈에 비교하세요</p>
+                
+                <!-- Product Type Filter -->
+                <div class="filter-item">
+                    <label for="productTypeSelect">제품 타입:</label>
+                    <select id="productTypeSelect" class="form-select" onchange="onFiltersChange()">
+                        <option value="roll" selected>롤매트</option>
+                        <option value="puzzle">퍼즐매트</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <i class="fas fa-won-sign"></i>
+                    <div class="stat-content">
+                        <h3>평균 가격/부피</h3>
+                        <p class="stat-value" id="avgPricePerVolume">-</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-ruler"></i>
+                    <div class="stat-content">
+                        <h3>두께 범위</h3>
+                        <p class="stat-value" id="thicknessRange">-</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-tag"></i>
+                    <div class="stat-content">
+                        <h3>가격 범위</h3>
+                        <p class="stat-value" id="priceRange">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="overviewChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Comparison Tab -->
+        <div id="comparison" class="tab-pane">
+            <div class="section-header">
+                <h2>경쟁사 비교</h2>
+                <p>두께 범위별로 경쟁사 가격을 비교하세요</p>
+                
+                <!-- Product Type Filter -->
+                <div class="filter-item">
+                    <label for="comparisonProductTypeSelect">제품 타입:</label>
+                    <select id="comparisonProductTypeSelect" class="form-select" onchange="updateComparison()">
+                        <option value="roll" selected>롤매트</option>
+                        <option value="puzzle">퍼즐매트</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="filter-controls">
+                <div class="filter-group">
+                    <label>최소 두께 (cm)</label>
+                    <input type="range" id="thicknessMin" min="0" max="10" step="0.1" value="0">
+                    <span id="thicknessMinValue">0</span>
+                </div>
+                <div class="filter-group">
+                    <label>최대 두께 (cm)</label>
+                    <input type="range" id="thicknessMax" min="0" max="10" step="0.1" value="10">
+                    <span id="thicknessMaxValue">10</span>
+                </div>
+                <button class="btn-primary" onclick="updateComparison()">
+                    <i class="fas fa-sync"></i> 업데이트
+                </button>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="comparisonChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Heatmap Tab -->
+        <div id="heatmap" class="tab-pane">
+            <div class="section-header">
+                <h2>가격 히트맵</h2>
+                <p>두께와 너비에 따른 가격 분포를 확인하세요</p>
+                
+                <!-- Product Type Filter -->
+                <div class="filter-item">
+                    <label for="heatmapProductTypeSelect">제품 타입:</label>
+                    <select id="heatmapProductTypeSelect" class="form-select" onchange="updateHeatmap()">
+                        <option value="roll" selected>롤매트</option>
+                        <option value="puzzle">퍼즐매트</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="heatmapContainer" class="heatmap-container">
+                <!-- Heatmap will be generated here -->
+            </div>
+        </div>
+
+        
+        <!-- Live Calendar Tab -->
+        <div id="calendar" class="tab-pane">
+            <div class="section-header">
+                <h2>라이브캘린더</h2>
+                <p>경쟁사별 라이브방송 및 프로모션 일정을 확인하세요</p>
+            </div>
+            
+            <!-- Upload Section -->
+            <div class="promotion-upload-section">
+                <form id="promotionUploadForm" action="/api/promotion-upload" method="post" enctype="multipart/form-data">
+                    <label for="promotionFile" class="upload-label">
+                        <i class="fas fa-file-excel"></i> 프로모션 데이터 업로드 (Excel/CSV)
+                    </label>
+                    <input type="file" id="promotionFile" name="file" accept=".xlsx,.xls,.csv" style="display: none;">
+                    <button type="submit" class="btn-primary" style="margin-left: 10px;">
+                        <i class="fas fa-upload"></i> 업로드
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Calendar View -->
+            <div class="calendar-container">
+                <div class="calendar-header">
+                    <button onclick="changeMonth(-1)" class="btn-secondary">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <h3 id="currentMonth">2025년 7월</h3>
+                    <button onclick="changeMonth(1)" class="btn-secondary">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                
+                <div id="calendarGrid" class="calendar-grid">
+                    <!-- Calendar will be generated here -->
+                </div>
+                
+                <!-- Live Pattern Analysis -->
+                <div class="live-pattern-section">
+                    <h3>라이브 패턴 분석</h3>
+                    <div id="patternAnalysis" class="pattern-analysis-grid">
+                        <!-- Pattern analysis will be generated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Coupon Status Tab -->
+        <div id="coupons" class="tab-pane">
+            <div class="section-header">
+                <h2>쿠폰 현황 & 실제 가격 분석</h2>
+                <p>쿠폰 적용 시 실제 가격과 경쟁력 변화를 확인하세요</p>
+            </div>
+            
+            <!-- Upload Section -->
+            <div class="coupon-upload-section">
+                <form id="couponUploadForm" action="/api/coupon-upload" method="post" enctype="multipart/form-data">
+                    <label for="couponFile" class="upload-label">
+                        <i class="fas fa-file-excel"></i> 쿠폰 데이터 업로드 (Excel/CSV)
+                    </label>
+                    <input type="file" id="couponFile" name="file" accept=".xlsx,.xls,.csv" style="display: none;">
+                    <button type="submit" class="btn-primary" style="margin-left: 10px;">
+                        <i class="fas fa-upload"></i> 업로드
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Price Analysis Section -->
+            <div class="coupon-price-analysis">
+                <h3>가격 비교 시뮬레이션 - 110×400cm 3장 기준</h3>
+                <div class="analysis-controls">
+                    <div class="thickness-selector">
+                        <label>두께 선택:</label>
+                        <select id="thicknessSelect" onchange="simulatePurchase()">
+                            <option value="1.2">1.2cm</option>
+                            <option value="1.4">1.4cm</option>
+                            <option value="1.5">1.5cm</option>
+                            <option value="1.7" selected>1.7cm</option>
+                            <option value="2.1">2.1cm</option>
+                            <option value="2.3">2.3cm</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="priceComparisonChart" class="price-comparison-container">
+                    <!-- Price comparison will be rendered here -->
+                </div>
+                
+                <div id="couponEffectivenessTable" class="effectiveness-table">
+                    <!-- Coupon effectiveness analysis will be shown here -->
+                </div>
+            </div>
+            
+            <!-- Coupon Status Filters -->
+            <div class="coupon-filters">
+                <button class="filter-btn active" onclick="filterCoupons('all')">전체</button>
+                <button class="filter-btn" onclick="filterCoupons('active')">진행중</button>
+                <button class="filter-btn" onclick="filterCoupons('upcoming')">예정</button>
+                <button class="filter-btn" onclick="filterCoupons('expired')">종료</button>
+            </div>
+            
+            <!-- Coupon List by Competitor -->
+            <div class="coupon-container">
+                <div id="couponList" class="coupon-grid">
+                    <!-- Coupon cards will be generated here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Review Trends Tab -->
+        <div id="review-trends" class="tab-pane">
+            <div class="section-header">
+                <h2>리뷰 추이 분석</h2>
+                <p>경쟁사별 리뷰 수, 평점 변화 추이를 분석합니다</p>
+            </div>
+            
+            <!-- Upload Section -->
+            <div class="review-upload-section">
+                <form id="reviewUploadForm" action="/api/review-upload" method="post" enctype="multipart/form-data">
+                    <label for="reviewFile" class="upload-label">
+                        <i class="fas fa-file-excel"></i> 리뷰 데이터 업로드 (Excel/CSV)
+                    </label>
+                    <input type="file" id="reviewFile" name="file" accept=".xlsx,.xls,.csv" style="display: none;">
+                    <button type="submit" class="btn-primary" style="margin-left: 10px;">
+                        <i class="fas fa-upload"></i> 업로드
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Review Analysis Controls -->
+            <div class="review-controls">
+                <div class="date-range-selector">
+                    <label>기간 선택:</label>
+                    <select id="reviewPeriod" onchange="updateReviewCharts()">
+                        <option value="7">최근 7일</option>
+                        <option value="30" selected>최근 30일</option>
+                        <option value="90">최근 90일</option>
+                        <option value="180">최근 6개월</option>
+                        <option value="365">최근 1년</option>
+                    </select>
+                </div>
+                
+                <div class="metric-selector">
+                    <label>표시 지표:</label>
+                    <input type="checkbox" id="showReviewCount" checked onchange="updateReviewCharts()">
+                    <label for="showReviewCount">리뷰 수</label>
+                    <input type="checkbox" id="showRating" checked onchange="updateReviewCharts()">
+                    <label for="showRating">평균 평점</label>
+                </div>
+            </div>
+            
+            <!-- Review Charts -->
+            <div class="review-charts-container">
+                <!-- Review Count Trend -->
+                <div class="chart-card">
+                    <h3>리뷰 수 추이</h3>
+                    <div class="chart-container">
+                        <canvas id="reviewCountChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Average Rating Trend -->
+                <div class="chart-card">
+                    <h3>평균 평점 추이</h3>
+                    <div class="chart-container">
+                        <canvas id="ratingTrendChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Review Summary Stats -->
+                <div class="review-summary">
+                    <h3>리뷰 요약 통계</h3>
+                    <div id="reviewSummaryStats" class="stats-grid">
+                        <!-- Summary stats will be generated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>데이터 로딩 중...</p>
+</div>
+{% endblock %}

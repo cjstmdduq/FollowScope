@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FollowScope - 경쟁 제품 분석</title>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-chart-line"></i>
+                <h1>FollowScope</h1>
+                {% if request.endpoint in ['data_page', 'upload_page'] %}
+                <span class="nav-label">데이터 센터</span>
+                {% else %}
+                <span class="nav-label">대시보드</span>
+                {% endif %}
+            </div>
+            <div class="nav-stats" id="navStats">
+                {% if request.endpoint not in ['data_page', 'upload_page'] %}
+                <span><i class="fas fa-box"></i> <span id="totalProducts">-</span> 제품</span>
+                <span><i class="fas fa-building"></i> <span id="totalCompetitors">-</span> 경쟁사</span>
+                <a href="/data" class="upload-link">
+                    <i class="fas fa-database"></i> 데이터 센터
+                </a>
+                {% else %}
+                <a href="/" class="dashboard-link">
+                    <i class="fas fa-chart-line"></i> 대시보드
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 FollowScope. All rights reserved.</p>
+            <p class="developer-info">개발자: 천승엽 (with Claude Opus4)</p>
+        </div>
+    </footer>
+
+
+    <!-- Command Palette Modal -->
+    <div id="commandPalette" class="command-palette-overlay">
+        <div class="command-palette">
+            <div class="command-search">
+                <i class="fas fa-search"></i>
+                <input type="text" id="commandSearch" placeholder="검색어를 입력하세요... (다중 선택: Ctrl + 클릭)" autocomplete="off">
+                <span class="command-hint">ESC 닫기</span>
+            </div>
+            <div class="command-results" id="commandResults">
+                <!-- Results will be populated here -->
+            </div>
+            <div class="command-actions">
+                <span class="selected-count">선택: <span id="selectedCount">0</span>개</span>
+                <button class="command-open-btn" onclick="openSelectedLinks()" disabled>
+                    <i class="fas fa-external-link-alt"></i> 선택 항목 열기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom JavaScript -->
+    {% if request.endpoint not in ['data_page', 'upload_page'] %}
+    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/purchase_simulation.js') }}"></script>
+    {% endif %}
+    <script src="{{ url_for('static', filename='js/command_palette.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/quicklinks.js') }}"></script>
+</body>
+</html>
