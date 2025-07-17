@@ -2223,7 +2223,272 @@ function updateReviewSummary(trends) {
 }
 
 function updateReviewCharts() {
-    loadReviewData();
+    loadReviewTrends();
+}
+
+// Review trends charts globals
+let reviewCountChart = null;
+let marketShareChart = null;
+
+function loadReviewTrends() {
+    const productType = document.getElementById('reviewProductTypeSelect')?.value || 'roll';
+    const period = document.getElementById('reviewPeriod')?.value || '30';
+    
+    fetch(`/api/review-trends?category=${productType}&period=${period}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Review trends data:', data);
+            
+            if (data.error) {
+                console.error('Error loading review trends:', data.error);
+                return;
+            }
+            
+            // 원본 데이터 저장
+            originalReviewData = data;
+            
+            // Update competitor checkboxes
+            updateReviewCompetitorCheckboxes(data.summary);
+            
+            // Update charts
+            updateReviewCountChart(data.chart_data);
+            updateMarketShareChart(data.summary);
+            updateReviewSummaryStats(data.summary);
+        })
+        .catch(error => {
+            console.error('Error loading review trends:', error);
+        });
+}
+
+function updateReviewCountChart(chartData) {
+    const ctx = document.getElementById('reviewCountChart');
+    if (!ctx) return;
+    
+    // Destroy existing chart
+    if (reviewCountChart) {
+        reviewCountChart.destroy();
+    }
+    
+    reviewCountChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: chartData.datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: '리뷰 수 추이 (기간별 자동 그룹화)'
+                },
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: '리뷰 수'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: '날짜'
+                    }
+                }
+            }
+        }
+    });
+}
+
+
+function updateReviewSummaryStats(summaryData) {
+    const container = document.getElementById('reviewSummaryStats');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    Object.entries(summaryData).forEach(([competitor, stats]) => {
+        const statCard = document.createElement('div');
+        statCard.className = 'stat-card';
+        statCard.innerHTML = `
+            <div class="stat-header">
+                <h4>${competitor}</h4>
+                <span class="stat-trend ${stats.recent_growth_rate > 0 ? 'positive' : 'negative'}">
+                    ${stats.recent_growth_rate > 0 ? '↗' : '↘'} ${stats.recent_growth_rate}%
+                </span>
+            </div>
+            <div class="stat-content">
+                <div class="stat-item">
+                    <span class="stat-label">전체 리뷰</span>
+                    <span class="stat-value">${stats.total_reviews}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">평균 평점</span>
+                    <span class="stat-value">${stats.avg_rating}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">최근 7일</span>
+                    <span class="stat-value">${stats.recent_7d_reviews}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">최근 30일</span>
+                    <span class="stat-value">${stats.recent_30d_reviews}</span>
+                </div>
+            </div>
+        `;
+        container.appendChild(statCard);
+    });
+}
+
+function updateReviewCompetitorCheckboxes(summaryData) {
+    const container = document.getElementById('reviewCompetitorCheckboxes');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    Object.keys(summaryData).forEach(competitor => {
+        const checkboxDiv = document.createElement('div');
+        checkboxDiv.className = 'competitor-checkbox';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `review-${competitor}`;
+        checkbox.checked = true;
+        checkbox.addEventListener('change', filterReviewCharts);
+        
+        const label = document.createElement('label');
+        label.htmlFor = `review-${competitor}`;
+        label.textContent = competitor;
+        
+        checkboxDiv.appendChild(checkbox);
+        checkboxDiv.appendChild(label);
+        container.appendChild(checkboxDiv);
+    });
+}
+
+function filterReviewCharts() {
+    // Get selected competitors
+    const selectedCompetitors = [];
+    const checkboxes = document.querySelectorAll('#reviewCompetitorCheckboxes input[type="checkbox"]:checked');
+    checkboxes.forEach(checkbox => {
+        const competitor = checkbox.id.replace('review-', '');
+        selectedCompetitors.push(competitor);
+    });
+    
+    // Filter chart data and update
+    filterChartDataByCompetitors(selectedCompetitors);
+}
+
+// 글로벌 변수로 원본 데이터 저장
+let originalReviewData = null;
+
+function filterChartDataByCompetitors(selectedCompetitors) {
+    if (!originalReviewData) return;
+    
+    // 선택된 경쟁사만 필터링
+    const filteredChartData = {
+        labels: originalReviewData.chart_data.labels,
+        datasets: originalReviewData.chart_data.datasets.filter(dataset => 
+            selectedCompetitors.includes(dataset.label)
+        )
+    };
+    
+    const filteredSummary = {};
+    selectedCompetitors.forEach(competitor => {
+        if (originalReviewData.summary[competitor]) {
+            filteredSummary[competitor] = originalReviewData.summary[competitor];
+        }
+    });
+    
+    // 차트 업데이트
+    updateReviewCountChart(filteredChartData);
+    updateMarketShareChart(filteredSummary);
+    updateReviewSummaryStats(filteredSummary);
+}
+
+function updateMarketShareChart(summaryData) {
+    const ctx = document.getElementById('marketShareChart');
+    if (!ctx) return;
+    
+    // Destroy existing chart
+    if (marketShareChart) {
+        marketShareChart.destroy();
+    }
+    
+    // Calculate market share based on selected period
+    const periodElement = document.getElementById('reviewPeriod');
+    const period = periodElement ? periodElement.value : '30';
+    let reviewsField = 'total_reviews';
+    
+    // Determine which review count to use based on period
+    if (period === '7') {
+        reviewsField = 'recent_7d_reviews';
+    } else if (period === '30') {
+        reviewsField = 'recent_30d_reviews';
+    }
+    
+    // Calculate total reviews for the selected period
+    const totalReviews = Object.values(summaryData).reduce((sum, data) => sum + data[reviewsField], 0);
+    
+    const marketShareData = [];
+    const labels = [];
+    const backgroundColors = [
+        '#4f46e5', '#ef4444', '#10b981', '#f59e0b',
+        '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'
+    ];
+    
+    Object.entries(summaryData).forEach(([competitor, data], index) => {
+        const reviews = data[reviewsField];
+        const share = totalReviews > 0 ? ((reviews / totalReviews) * 100).toFixed(1) : 0;
+        labels.push(`${competitor} (${share}%)`);
+        marketShareData.push(parseFloat(share));
+    });
+    
+    marketShareChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: marketShareData,
+                backgroundColor: backgroundColors,
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: period === '7' ? '시장점유율 (최근 7일 리뷰 기준)' : 
+                          period === '30' ? '시장점유율 (최근 30일 리뷰 기준)' :
+                          '시장점유율 (전체 리뷰 기준)'
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const competitor = context.label.split(' (')[0];
+                            const percentage = context.parsed;
+                            const reviews = summaryData[competitor][reviewsField];
+                            return `${competitor}: ${percentage}% (${reviews}개 리뷰)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
 }
 
 function getCompetitorColor(competitor, index) {
@@ -2242,6 +2507,75 @@ function getCompetitorColor(competitor, index) {
     ];
     
     return colors[competitor] || defaultColors[index % defaultColors.length];
+}
+
+// Chart expansion functionality
+let modalChart = null;
+let currentChartData = null;
+
+function expandChart(chartType) {
+    const modal = document.getElementById('chartModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalCanvas = document.getElementById('modalChart');
+    
+    // Set title based on chart type
+    if (chartType === 'reviewCount') {
+        modalTitle.textContent = '리뷰 수 추이 - 확대 보기';
+        // Clone the review count chart data
+        if (reviewCountChart) {
+            currentChartData = {
+                type: 'line',
+                data: JSON.parse(JSON.stringify(reviewCountChart.data)),
+                options: JSON.parse(JSON.stringify(reviewCountChart.options))
+            };
+        }
+    } else if (chartType === 'marketShare') {
+        modalTitle.textContent = '시장점유율 (리뷰 수 기준) - 확대 보기';
+        // Clone the market share chart data
+        if (marketShareChart) {
+            currentChartData = {
+                type: 'doughnut',
+                data: JSON.parse(JSON.stringify(marketShareChart.data)),
+                options: JSON.parse(JSON.stringify(marketShareChart.options))
+            };
+        }
+    }
+    
+    // Show modal
+    modal.style.display = 'block';
+    
+    // Destroy existing modal chart if any
+    if (modalChart) {
+        modalChart.destroy();
+    }
+    
+    // Create new chart in modal
+    if (currentChartData) {
+        // Adjust options for modal view
+        currentChartData.options.responsive = true;
+        currentChartData.options.maintainAspectRatio = false;
+        
+        modalChart = new Chart(modalCanvas, currentChartData);
+    }
+}
+
+function closeChartModal() {
+    const modal = document.getElementById('chartModal');
+    modal.style.display = 'none';
+    
+    // Destroy modal chart
+    if (modalChart) {
+        modalChart.destroy();
+        modalChart = null;
+    }
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('chartModal');
+    if (event.target === modal) {
+        closeChartModal();
+    }
 }
 
 // Handle review file upload
@@ -2268,6 +2602,6 @@ window.showTab = function(tabName) {
             }
         }, 500);
     } else if (tabName === 'review-trends') {
-        loadReviewData();
+        loadReviewTrends();
     }
 };

@@ -290,6 +290,15 @@
             <div class="section-header">
                 <h2>리뷰 추이 분석</h2>
                 <p>경쟁사별 리뷰 수, 평점 변화 추이를 분석합니다</p>
+                
+                <!-- Product Type Filter -->
+                <div class="filter-item">
+                    <label for="reviewProductTypeSelect">제품 타입:</label>
+                    <select id="reviewProductTypeSelect" class="form-select" onchange="updateReviewCharts()">
+                        <option value="roll" selected>롤매트</option>
+                        <option value="puzzle">퍼즐매트</option>
+                    </select>
+                </div>
             </div>
             
             <!-- Upload Section -->
@@ -318,12 +327,11 @@
                     </select>
                 </div>
                 
-                <div class="metric-selector">
-                    <label>표시 지표:</label>
-                    <input type="checkbox" id="showReviewCount" checked onchange="updateReviewCharts()">
-                    <label for="showReviewCount">리뷰 수</label>
-                    <input type="checkbox" id="showRating" checked onchange="updateReviewCharts()">
-                    <label for="showRating">평균 평점</label>
+                <div class="competitor-selector">
+                    <label>경쟁사 선택:</label>
+                    <div id="reviewCompetitorCheckboxes" class="competitor-checkboxes">
+                        <!-- 경쟁사 체크박스들이 여기에 동적으로 추가됩니다 -->
+                    </div>
                 </div>
             </div>
             
@@ -331,25 +339,31 @@
             <div class="review-charts-container">
                 <!-- Review Count Trend -->
                 <div class="chart-card">
-                    <h3>리뷰 수 추이</h3>
+                    <div class="chart-header">
+                        <h3>리뷰 수 추이</h3>
+                        <button class="expand-btn" onclick="expandChart('reviewCount')" title="확대 보기">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3.5 3.5L1 1M1 1V4M1 1H4M12.5 3.5L15 1M15 1V4M15 1H12M3.5 12.5L1 15M1 15V12M1 15H4M12.5 12.5L15 15M15 15V12M15 15H12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
                     <div class="chart-container">
                         <canvas id="reviewCountChart"></canvas>
                     </div>
                 </div>
                 
-                <!-- Average Rating Trend -->
+                <!-- Market Share Chart -->
                 <div class="chart-card">
-                    <h3>평균 평점 추이</h3>
-                    <div class="chart-container">
-                        <canvas id="ratingTrendChart"></canvas>
+                    <div class="chart-header">
+                        <h3>시장점유율 (리뷰 수 기준)</h3>
+                        <button class="expand-btn" onclick="expandChart('marketShare')" title="확대 보기">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3.5 3.5L1 1M1 1V4M1 1H4M12.5 3.5L15 1M15 1V4M15 1H12M3.5 12.5L1 15M1 15V12M1 15H4M12.5 12.5L15 15M15 15V12M15 15H12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
                     </div>
-                </div>
-                
-                <!-- Review Summary Stats -->
-                <div class="review-summary">
-                    <h3>리뷰 요약 통계</h3>
-                    <div id="reviewSummaryStats" class="stats-grid">
-                        <!-- Summary stats will be generated here -->
+                    <div class="chart-container">
+                        <canvas id="marketShareChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -362,5 +376,16 @@
 <div id="loadingOverlay" class="loading-overlay">
     <div class="spinner"></div>
     <p>데이터 로딩 중...</p>
+</div>
+
+<!-- Chart Modal -->
+<div id="chartModal" class="chart-modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeChartModal()">&times;</span>
+        <h2 id="modalTitle">차트 확대 보기</h2>
+        <div class="modal-chart-container">
+            <canvas id="modalChart"></canvas>
+        </div>
+    </div>
 </div>
 {% endblock %}

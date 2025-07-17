@@ -10,6 +10,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from src.config import get_competitor_rules
 from src.parser import process_raw_data
+from src.review_analyzer import ReviewAnalyzer
 from file_watcher import FileWatcher
 import pandas as pd
 import json
@@ -18,9 +19,9 @@ from datetime import datetime
 # Fix paths for web app
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PRODUCT_DATA_PATH = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'products')
+REVIEW_DATA_PATH = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'reviews')
 LIVE_DATA_PATH = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'live')
 COUPON_DATA_PATH = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'coupons')
-REVIEW_DATA_PATH = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'reviews')
 MACRO_DATA_PATH = os.path.join(PROJECT_ROOT, 'scraping', 'macros')
 
 app = Flask(__name__)
@@ -295,30 +296,55 @@ def save_coupon_data():
     pass
 
 def load_review_data():
-    """Load review data from file"""
+    """Load review data from CSV files"""
     global review_data
-    review_file = os.path.join(REVIEW_DATA_PATH, 'reviews.json')
+    review_data = []
+    
     try:
-        if os.path.exists(review_file):
-            with open(review_file, 'r', encoding='utf-8') as f:
-                review_data = json.load(f)
-                print(f"Loaded {len(review_data)} reviews from file")
-        else:
-            review_data = []
+        categories = ['roll', 'puzzle', 'tpu', 'double_side', 'folder']
+        
+        for category in categories:
+            category_path = os.path.join(REVIEW_DATA_PATH, category)
+            if not os.path.exists(category_path):
+                continue
+            
+            # 각 카테고리별 CSV 파일 로드
+            for csv_file in os.listdir(category_path):
+                if not csv_file.endswith('.csv'):
+                    continue
+                    
+                csv_path = os.path.join(category_path, csv_file)
+                try:
+                    df = pd.read_csv(csv_path, encoding='utf-8-sig')
+                    
+                    # 경쟁사 이름 추출 (파일명에서)
+                    competitor_name = csv_file.split()[0] if csv_file.split() else 'Unknown'
+                    
+                    # 각 리뷰를 review_data 형식으로 변환
+                    for _, row in df.iterrows():
+                        review = {
+                            'competitor': competitor_name,
+                            'category': category,
+                            'rating': row.get('평점', 0),
+                            'date': str(row.get('작성일', '')),
+                            'title': str(row.get('제목', '')),
+                            'content': str(row.get('내용', '')),
+                            'product': str(row.get('상품명', ''))
+                        }
+                        review_data.append(review)
+                        
+                except Exception as e:
+                    print(f"Error loading {csv_file}: {str(e)}")
+        
+        print(f"Loaded {len(review_data)} reviews from CSV files")
+        
     except Exception as e:
         print(f"Error loading review data: {e}")
         review_data = []
 
 def save_review_data():
-    """Save review data to file"""
-    os.makedirs(REVIEW_DATA_PATH, exist_ok=True)
-    review_file = os.path.join(REVIEW_DATA_PATH, 'reviews.json')
-    try:
-        with open(review_file, 'w', encoding='utf-8') as f:
-            json.dump(review_data, f, ensure_ascii=False, indent=2)
-        print(f"Saved {len(review_data)} reviews to file")
-    except Exception as e:
-        print(f"Error saving review data: {e}")
+    """Deprecated - review data is now loaded directly from CSV files"""
+    pass
 
 @app.route('/')
 def index():
@@ -638,104 +664,28 @@ def get_reviews():
 
 @app.route('/api/review-upload', methods=['POST'])
 def upload_review():
-    """Upload review data from Excel/CSV"""
-    global review_data
-    
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file provided'}), 400
-    
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'No file selected'}), 400
-    
-    # Check file extension
-    ext = os.path.splitext(file.filename)[1].lower()
-    if ext not in app.config['UPLOAD_EXTENSIONS']:
-        return jsonify({'error': 'Invalid file type'}), 400
-    
-    try:
-        # Save file temporarily
-        temp_path = os.path.join(os.path.dirname(__file__), 'temp_review' + ext)
-        file.save(temp_path)
-        
-        # Read file
-        if ext == '.csv':
-            df = pd.read_csv(temp_path, encoding='utf-8-sig')
-        else:
-            df = pd.read_excel(temp_path)
-        
-        # Process review data
-        # Expected columns: date, competitor, review_count, average_rating, product_name (optional)
-        review_data = []
-        
-        for _, row in df.iterrows():
-            review = {
-                'date': str(row.get('date', '')),
-                'competitor': str(row.get('competitor', '')),
-                'review_count': int(row.get('review_count', 0)),
-                'average_rating': float(row.get('average_rating', 0)),
-                'product_name': str(row.get('product_name', '')) if pd.notna(row.get('product_name')) else ''
-            }
-            
-            # Validate required fields
-            if review['date'] and review['competitor'] and review['review_count'] >= 0:
-                # Format date to YYYY-MM-DD
-                try:
-                    date_obj = pd.to_datetime(review['date'])
-                    review['date'] = date_obj.strftime('%Y-%m-%d')
-                    review_data.append(review)
-                except:
-                    pass
-        
-        # Remove temp file
-        os.remove(temp_path)
-        
-        # Save to file
-        save_review_data()
-        
-        return jsonify({
-            'success': True,
-            'message': f'Successfully uploaded {len(review_data)} review entries',
-            'count': len(review_data)
-        })
-        
-    except Exception as e:
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
-        return jsonify({'error': str(e)}), 500
+    """Upload review data from Excel/CSV - Deprecated as we now read directly from CSV files"""
+    return jsonify({
+        'error': 'Review upload is deprecated. Place CSV files directly in the review data folders.'
+    }), 400
 
 @app.route('/api/review-trends', methods=['GET'])
 def get_review_trends():
-    """Get review trends data with filtering"""
-    period = request.args.get('period', '30')  # days
+    """Get review trends data using ReviewAnalyzer"""
+    category = request.args.get('category', 'roll')
+    period = request.args.get('period', '30')
     
     try:
+        analyzer = ReviewAnalyzer(REVIEW_DATA_PATH)
         period_days = int(period)
-        end_date = datetime.now()
-        start_date = end_date - pd.Timedelta(days=period_days)
         
-        # Filter review data by date range
-        filtered_reviews = [
-            r for r in review_data 
-            if pd.to_datetime(r['date']) >= start_date
-        ]
+        # Get review trends analysis
+        results = {
+            'summary': analyzer.get_review_trends_summary(category),
+            'chart_data': analyzer.get_chart_data(category, period_days)
+        }
         
-        # Group by competitor and date
-        trends = {}
-        for review in filtered_reviews:
-            comp = review['competitor']
-            if comp not in trends:
-                trends[comp] = {
-                    'dates': [],
-                    'review_counts': [],
-                    'ratings': []
-                }
-            
-            trends[comp]['dates'].append(review['date'])
-            trends[comp]['review_counts'].append(review['review_count'])
-            trends[comp]['ratings'].append(review['average_rating'])
-        
-        return jsonify(trends)
+        return jsonify(results)
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
