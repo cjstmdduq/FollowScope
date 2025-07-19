@@ -31,6 +31,16 @@ body {
     padding: 0 40px;
 }
 
+/* Mobile Menu Toggle - Hidden by default */
+.mobile-menu-toggle {
+    display: none;
+}
+
+/* Sidebar Overlay - Hidden by default */
+.sidebar-overlay {
+    display: none;
+}
+
 /* Navbar */
 .navbar {
     background-color: white;
@@ -1731,9 +1741,7 @@ footer .developer-info {
         display: block;
     }
     
-    .sidebar {
-        display: none;
-    }
+    /* Sidebar is handled by mobile.css for mobile devices */
     
     .main-content {
         padding: 10px;
@@ -1754,21 +1762,7 @@ footer .developer-info {
         font-size: 14px;
     }
     
-    /* Show mobile message */
-    .main-content::before {
-        content: "이 애플리케이션은 데스크톱 환경에 최적화되어 있습니다. PC에서 이용해 주세요.";
-        display: block;
-        padding: 20px;
-        background-color: #fef3c7;
-        color: #92400e;
-        border-radius: 8px;
-        text-align: center;
-        margin-bottom: 20px;
-    }
-    
-    .tab-content {
-        display: none;
-    }
+    /* Mobile styles moved to mobile.css */
     
 }
 

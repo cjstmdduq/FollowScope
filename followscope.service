@@ -1,0 +1,17 @@
+[Unit]
+Description=FollowScope Gunicorn Application
+After=network.target
+
+[Service]
+User=root
+Group=root
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+WorkingDirectory=/home/ubuntu/FollowScope
+Environment="PATH=/home/ubuntu/FollowScope/venv/bin"
+ExecStartPre=/bin/mkdir -p /run/gunicorn
+ExecStart=/home/ubuntu/FollowScope/venv/bin/gunicorn -b 0.0.0.0:80 web_app.app:app --error-logfile /home/ubuntu/FollowScope/gunicorn-error.log --access-logfile /home/ubuntu/FollowScope/gunicorn-access.log
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,4 +1,7 @@
-pandas
-openpyxl
-plotly
-flask
+pandas==2.1.4
+openpyxl==3.1.2
+plotly==5.18.0
+flask==3.0.0
+werkzeug==3.0.1
+gunicorn==21.2.0
+python-dotenv==1.0.0

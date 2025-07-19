@@ -11,7 +11,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from src.config import get_competitor_rules
 from src.parser import process_raw_data
 from src.review_analyzer import ReviewAnalyzer
-from file_watcher import FileWatcher
+from .file_watcher import FileWatcher
 import pandas as pd
 import json
 from datetime import datetime
@@ -746,6 +746,19 @@ def get_macro(filename):
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# Initialize data on module load (for Gunicorn)
+print("Initializing FollowScope Web App...")
+load_data()
+load_live_data()
+load_coupon_data()
+load_review_data()
+
+# Start file watcher
+file_watcher = FileWatcher(PRODUCT_DATA_PATH, load_data, interval=10)
+file_watcher.start()
+
+print(f"Watching directory: {PRODUCT_DATA_PATH}")
 
 if __name__ == '__main__':
     # Load data on startup

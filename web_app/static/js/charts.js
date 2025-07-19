@@ -702,11 +702,12 @@ function createAllCompetitorsHeatmap(data, thicknesses, widths) {
     // Width headers
     widths.forEach(width => {
         const th = document.createElement('th');
-        th.style.padding = '10px';
+        th.style.padding = '12px 8px';
         th.style.border = '1px solid #e5e7eb';
         th.style.backgroundColor = '#f9fafb';
         th.style.fontWeight = 'bold';
         th.style.fontSize = '11px';
+        th.style.minWidth = '90px';
         th.textContent = `${width}cm`;
         headerRow.appendChild(th);
     });
@@ -1051,7 +1052,8 @@ function createHeatmapTable(data, thicknesses, widths, showCompetitorInfo) {
     // Create table
     const table = document.createElement('table');
     table.className = 'heatmap-table';
-    table.style.width = '100%';
+    table.style.width = 'auto';
+    table.style.minWidth = '100%';
     table.style.borderCollapse = 'collapse';
     table.style.fontSize = '12px';
     
@@ -1068,11 +1070,12 @@ function createHeatmapTable(data, thicknesses, widths, showCompetitorInfo) {
     // Width headers
     widths.forEach(width => {
         const th = document.createElement('th');
-        th.style.padding = '10px';
+        th.style.padding = '12px 8px';
         th.style.border = '1px solid #e5e7eb';
         th.style.backgroundColor = '#f9fafb';
         th.style.fontWeight = 'bold';
         th.style.fontSize = '11px';
+        th.style.minWidth = '90px';
         th.textContent = `${width}cm`;
         headerRow.appendChild(th);
     });
@@ -1095,10 +1098,12 @@ function createHeatmapTable(data, thicknesses, widths, showCompetitorInfo) {
         // Data cells
         widths.forEach(width => {
             const cell = document.createElement('td');
-            cell.style.padding = '10px';
+            cell.style.padding = '12px 8px';
             cell.style.border = '1px solid #e5e7eb';
             cell.style.textAlign = 'center';
             cell.style.fontSize = '11px';
+            cell.style.minWidth = '90px';
+            cell.style.whiteSpace = 'nowrap';
             
             const key = `${thickness}_${width}`;
             const products = productMap[key] || [];
@@ -1126,6 +1131,7 @@ function createHeatmapTable(data, thicknesses, widths, showCompetitorInfo) {
                 
                 cell.style.backgroundColor = `rgba(${r}, ${g}, ${b}, 0.3)`;
                 
+                // Show content based on mode
                 // Show content based on mode
                 if (showCompetitorInfo && products.length === 1) {
                     // Single competitor mode - show price

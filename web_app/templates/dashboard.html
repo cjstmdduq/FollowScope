@@ -2,8 +2,16 @@
 
 {% block content %}
 <div class="dashboard-container">
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" onclick="toggleMobileSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+    
     <!-- Sidebar Navigation -->
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
         <div class="sidebar-section">
             <h3 class="sidebar-title">제품 비교</h3>
             <ul class="sidebar-menu">
@@ -388,4 +396,5 @@
         </div>
     </div>
 </div>
+
 {% endblock %}

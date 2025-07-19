@@ -44,6 +44,9 @@ pip install -r requirements.txt
 cd /Users/cjstmdduq/Code/FollowScope && source venv/bin/activate && cd web_app && python app.py
 ```
 
+### 종료 [로컬]
+kill -9 $(lsof -t -i:8080) <- 야 이거안됨>
+
 브라우저에서 http://localhost:8080 접속
 
 ## 🛠 기술 스택

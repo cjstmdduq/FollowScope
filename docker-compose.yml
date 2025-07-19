@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./FollowScope/data:/app/FollowScope/data
+      - ./scraping/macros:/app/scraping/macros
+    environment:
+      - FLASK_ENV=production
+    restart: unless-stopped
