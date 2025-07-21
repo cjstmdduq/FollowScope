@@ -53,6 +53,31 @@ kill -9 $(lsof -t -i:8080) <- 야 이거안됨>
 
 브라우저에서 http://localhost:8080 접속
 
+## 🌐 배포 정보
+
+### AWS Lightsail 서버
+- **퍼블릭 IP**: 3.35.55.31
+- **서비스 URL**: http://3.35.55.31
+- **리전**: Seoul (ap-northeast-2)
+- **인스턴스**: Ubuntu 22.04 LTS
+
+### 서버 관리
+```bash
+# SSH 접속
+ssh -i /Users/cjstmdduq/Downloads/LightsailDefaultKey-ap-northeast-2.pem ubuntu@3.35.55.31
+
+# 서비스 재시작
+sudo systemctl restart followscope
+
+# 로그 확인
+sudo journalctl -u followscope -f
+
+# 최신 코드 배포
+cd /home/ubuntu/FollowScope
+git pull origin main
+sudo systemctl restart followscope
+```
+
 ## 🛠 기술 스택
 
 - **Backend**: Python 3, Flask
