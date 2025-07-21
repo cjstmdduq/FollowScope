@@ -78,13 +78,53 @@ git pull origin main
 sudo systemctl restart followscope
 ```
 
+## 🔄 개발 및 배포 구조
+
+### 상호 연동 구조
+```
+로컬 개발 환경 (MacBook)
+    ↓ git push
+GitHub Repository (중앙 저장소)
+    ↓ git pull  
+AWS Lightsail 서버 (운영 환경)
+    ↓
+웹 서비스 (http://3.35.55.31)
+```
+
+### 배포 프로세스
+
+1. **로컬 개발** 
+   ```bash
+   # 코드 수정 후
+   git add .
+   git commit -m "설명"
+   git push origin main
+   ```
+
+2. **서버 배포**
+   ```bash
+   # SSH 접속
+   ssh -i /Users/cjstmdduq/Downloads/LightsailDefaultKey-ap-northeast-2.pem ubuntu@3.35.55.31
+   
+   # 최신 코드 반영
+   cd /home/ubuntu/FollowScope
+   git pull origin main
+   sudo systemctl restart followscope
+   ```
+
+3. **상태 확인**
+   - GitHub: https://github.com/cjstmdduq/FollowScope
+   - 라이브 서비스: http://3.35.55.31
+   - 서비스 로그: `sudo journalctl -u followscope -f`
+
 ## 🛠 기술 스택
 
-- **Backend**: Python 3, Flask
+- **Backend**: Python 3, Flask, Gunicorn
 - **Data Processing**: Pandas, OpenPyXL
 - **Visualization**: Chart.js, Plotly
 - **Frontend**: HTML5, CSS3, JavaScript
-- **Deployment**: Railway
+- **Deployment**: AWS Lightsail (Ubuntu 22.04)
+- **Version Control**: Git, GitHub
 
 ## 📁 프로젝트 구조
 
