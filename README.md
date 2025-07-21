@@ -41,6 +41,10 @@ pip install -r requirements.txt
 
 ### 실행 [이거]
 ```bash
+# 방법 1: 프로젝트 루트에서 모듈로 실행 (권장)
+cd /Users/cjstmdduq/Code/FollowScope && source venv/bin/activate && python -m web_app.app
+
+# 방법 2: web_app 디렉토리에서 직접 실행 (상대 임포트를 절대 임포트로 변경 후)
 cd /Users/cjstmdduq/Code/FollowScope && source venv/bin/activate && cd web_app && python app.py
 ```
 

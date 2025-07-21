@@ -11,7 +11,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from src.config import get_competitor_rules
 from src.parser import process_raw_data
 from src.review_analyzer import ReviewAnalyzer
-from .file_watcher import FileWatcher
+try:
+    from .file_watcher import FileWatcher
+except ImportError:
+    from file_watcher import FileWatcher
 import pandas as pd
 import json
 from datetime import datetime
