@@ -145,3 +145,87 @@ FollowScope/
 │   └── live/             # 라이브 일정
 └── scraping/macros/       # 데이터 수집 매크로
 ```
+
+## 🔄 데이터 동기화 (Git LFS)
+
+FollowScope는 Git LFS를 사용하여 로컬과 AWS 서버 간 데이터를 양방향으로 동기화합니다.
+
+### 초기 설정
+
+1. **Git LFS 설치**
+```bash
+# macOS
+brew install git-lfs
+
+# Ubuntu/AWS
+sudo apt-get update
+sudo apt-get install git-lfs
+```
+
+2. **Git LFS 초기화**
+```bash
+git lfs install
+```
+
+### 동기화 방법
+
+#### 자동 동기화 (권장)
+```bash
+# 동기화 스크립트 실행
+./sync_data.sh
+```
+
+#### 수동 동기화
+
+**로컬 → AWS**
+```bash
+# 로컬에서 작업 후
+git add FollowScope/data/products/**/*.csv
+git commit -m "데이터 업데이트"
+git push origin main
+
+# AWS 서버에서
+cd /home/ubuntu/FollowScope
+git pull origin main
+sudo systemctl restart followscope
+```
+
+**AWS → 로컬**
+```bash
+# AWS에서 데이터 변경 후
+git add FollowScope/data/products/**/*.csv
+git commit -m "서버 데이터 업데이트"
+git push origin main
+
+# 로컬에서
+git pull origin main
+```
+
+### 충돌 해결
+
+동일 파일을 양쪽에서 수정한 경우:
+
+1. **로컬 우선 (내 데이터가 최신)**
+```bash
+git push --force origin main
+```
+
+2. **서버 우선 (AWS 데이터가 최신)**
+```bash
+git fetch origin
+git reset --hard origin/main
+```
+
+3. **파일별 선택**
+```bash
+# 특정 파일만 서버 버전으로
+git checkout origin/main -- path/to/file.csv
+
+# 또는 로컬 버전 유지
+git add path/to/file.csv
+```
+
+### 주의사항
+- 작업 전 항상 `git pull` 실행
+- 대용량 CSV 파일은 Git LFS로 관리됨
+- 충돌 시 데이터 특성상 덮어쓰기 가능

@@ -30,6 +30,7 @@ Thumbs.db
 *.log
 *.csv
 !FollowScope/data/raw/*.csv
+!FollowScope/data/products/**/*.csv
 FollowScope/data/processed/*.csv
 
 # Jupyter Notebook
