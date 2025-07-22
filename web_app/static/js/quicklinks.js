@@ -75,6 +75,35 @@ const quickLinksData = {
         links: {
             // 폴더매트 링크 추가
         }
+    },
+    "강아지롤매트": {
+        icon: "fa-paw",
+        links: {
+            "따사룸": {
+                url: "https://brand.naver.com/ddasaroom/products/4200445704",
+                code: "4200445704"
+            },
+            "에코폼": {
+                url: "https://brand.naver.com/ecofoam/products/2008613872",
+                code: "2008613872"
+            },
+            "리포소": {
+                url: "https://brand.naver.com/riposopet/products/5151541190",
+                code: "5151541190"
+            },
+            "로하우스": {
+                url: "https://smartstore.naver.com/lohouse/products/5921166460",
+                code: "5921166460"
+            },
+            "올웨이즈올펫": {
+                url: "https://brand.naver.com/allpet/products/5311346622",
+                code: "5311346622"
+            },
+            "티지오매트": {
+                url: "https://brand.naver.com/tgomat/products/5154283552",
+                code: "5154283552"
+            }
+        }
     }
 };
 
@@ -94,11 +123,33 @@ function initializeQuickLinks() {
         panel.classList.remove('collapsed');
     }
     
+    // Add Naver Shopping Search at the top
+    const searchDiv = document.createElement('div');
+    searchDiv.className = 'naver-search-container';
+    searchDiv.innerHTML = `
+        <div class="search-input-wrapper">
+            <input type="text" id="naverSearchInput" class="search-input" placeholder="검색어" value="층간소음매트">
+            <div class="search-buttons">
+                <a href="#" id="priceCompareLink" class="search-btn-icon price-compare" target="_blank" title="가격비교">N</a>
+                <a href="#" id="plusStoreLink" class="search-btn-icon plus-store" target="_blank" title="플러스스토어">+</a>
+            </div>
+        </div>
+    `;
+    categoriesContainer.appendChild(searchDiv);
+    
+    // Set up search functionality
+    setupNaverSearch();
+    
+    // Add separator
+    const separator = document.createElement('div');
+    separator.className = 'quicklinks-separator';
+    categoriesContainer.appendChild(separator);
+    
     for (const [category, data] of Object.entries(quickLinksData)) {
         if (Object.keys(data.links).length === 0) continue; // Skip empty categories
         
         const categoryDiv = document.createElement('div');
-        categoryDiv.className = 'sidebar-submenu';
+        categoryDiv.className = 'sidebar-submenu collapsed'; // Start collapsed
         
         // Category Header
         const headerDiv = document.createElement('div');
@@ -141,13 +192,39 @@ function initializeQuickLinks() {
     }
 }
 
+// Setup Naver Search functionality
+function setupNaverSearch() {
+    const searchInput = document.getElementById('naverSearchInput');
+    const priceCompareLink = document.getElementById('priceCompareLink');
+    const plusStoreLink = document.getElementById('plusStoreLink');
+    
+    // Update links when input changes
+    function updateLinks() {
+        const query = encodeURIComponent(searchInput.value);
+        priceCompareLink.href = `https://search.shopping.naver.com/search/all?query=${query}&frm=NVSCPRO&nl-ts-pid=jc8Hqdqo1SossD58I6CssssstJ0-084716&bt=-1`;
+        plusStoreLink.href = `https://search.shopping.naver.com/ns/search?query=${query}`;
+    }
+    
+    // Update links when input changes
+    searchInput.addEventListener('input', updateLinks);
+    
+    // Initialize links
+    updateLinks();
+}
+
+
 // Toggle Category Collapse
 function toggleCategory(categoryDiv) {
     categoryDiv.classList.toggle('collapsed');
     const arrow = categoryDiv.querySelector('.submenu-arrow');
     if (arrow) {
-        arrow.classList.toggle('fa-chevron-down');
-        arrow.classList.toggle('fa-chevron-up');
+        if (categoryDiv.classList.contains('collapsed')) {
+            arrow.classList.remove('fa-chevron-up');
+            arrow.classList.add('fa-chevron-down');
+        } else {
+            arrow.classList.remove('fa-chevron-down');
+            arrow.classList.add('fa-chevron-up');
+        }
     }
 }
 

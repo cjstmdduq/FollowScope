@@ -12,10 +12,46 @@
     <!-- Sidebar Navigation -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-section">
+            <h3 class="sidebar-title">경쟁사 동향</h3>
+            <ul class="sidebar-menu">
+                <li>
+                    <button class="sidebar-btn" onclick="location.href='/'">
+                        <i class="fas fa-stream"></i>
+                        <span>Feed</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">제품 비교</h3>
+            <ul class="sidebar-menu">
+                <li>
+                    <button class="sidebar-btn" onclick="location.href='/dashboard'">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>대시보드</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">관리</h3>
+            <ul class="sidebar-menu">
+                <li>
+                    <button class="sidebar-btn active" onclick="location.href='/data'">
+                        <i class="fas fa-database"></i>
+                        <span>데이터센터</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-section" style="margin-top: 30px; padding-top: 30px; border-top: 1px solid #e5e7eb;">
             <h3 class="sidebar-title">데이터 업로드</h3>
             <ul class="sidebar-menu">
                 <li>
-                    <button class="sidebar-btn active" onclick="showUploadTab('product')">
+                    <button class="sidebar-btn" onclick="showUploadTab('product')">
                         <i class="fas fa-box"></i>
                         <span>제품 데이터</span>
                     </button>
@@ -1121,8 +1157,8 @@
 <script>
 // Tab switching for sidebar
 function showUploadTab(type) {
-    // Remove active class from all sidebar buttons
-    document.querySelectorAll('.sidebar-btn').forEach(btn => {
+    // Remove active class from all sidebar buttons in data sections only
+    document.querySelectorAll('.sidebar-section:nth-child(n+4) .sidebar-btn').forEach(btn => {
         btn.classList.remove('active');
     });
     
@@ -1137,7 +1173,7 @@ function showUploadTab(type) {
     // Show corresponding section
     if (type === 'live') {
         // For live tab, check if we're in data view or upload view
-        const isDataView = document.querySelector('.sidebar-section:nth-child(2) .sidebar-btn.active');
+        const isDataView = document.querySelector('.sidebar-section:nth-child(5) .sidebar-btn.active');
         if (isDataView) {
             document.getElementById('live-upload').classList.add('active');
             if (liveCalendarData.length === 0) {
@@ -1169,15 +1205,8 @@ document.addEventListener('DOMContentLoaded', function() {
     loadDataStatus();
     loadMacros();
     
-    // Check if we're on the product tab before loading product data
-    const productSection = document.getElementById('product-upload');
-    if (productSection && productSection.classList.contains('active')) {
-        // Small delay to ensure DOM is fully ready
-        setTimeout(() => {
-            loadProductData();
-            setupProductDataControls();
-        }, 100);
-    }
+    // Show status tab by default
+    showUploadTab('status');
 });
 
 function setupUploadArea(box) {

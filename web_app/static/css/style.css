@@ -19,7 +19,7 @@
 
 body {
     font-family: 'Noto Sans KR', sans-serif;
-    background-color: #f8fafc;
+    background-color: white;
     color: var(--dark-color);
     line-height: 1.6;
 }
@@ -146,7 +146,7 @@ body {
 .dashboard-container {
     display: flex;
     min-height: calc(100vh - 80px - 100px);
-    background-color: #f8fafc;
+    background-color: white;
     gap: 16px;
     padding: 16px;
     width: 100%;
@@ -722,7 +722,7 @@ footer .developer-info {
 }
 
 .calendar-day:hover {
-    background-color: #f8fafc;
+    background-color: white;
 }
 
 .calendar-day.today {
@@ -737,7 +737,7 @@ footer .developer-info {
 
 .calendar-day-header {
     font-weight: 500;
-    background-color: #f8fafc;
+    background-color: white;
     text-align: center;
     padding: 10px;
     border-radius: 4px;
@@ -879,7 +879,7 @@ footer .developer-info {
 
 /* Coupon Status Styles */
 .coupon-upload-section {
-    background-color: #f8fafc;
+    background-color: white;
     padding: 16px;
     border-radius: 6px;
     margin-bottom: 20px;
@@ -928,7 +928,7 @@ footer .developer-info {
     border: 1px solid var(--border-color);
     border-radius: 6px;
     padding: 16px;
-    background-color: #f8fafc;
+    background-color: white;
 }
 
 .competitor-coupon-header {
@@ -1018,7 +1018,7 @@ footer .developer-info {
 }
 
 .coupon-details {
-    background-color: #f8fafc;
+    background-color: white;
     border-radius: 4px;
     padding: 8px;
     margin: 8px 0;
@@ -1078,7 +1078,7 @@ footer .developer-info {
 }
 
 .coupon-info {
-    background-color: #f8fafc;
+    background-color: white;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
     padding: 12px;
@@ -1281,7 +1281,7 @@ footer .developer-info {
 }
 
 .product-info {
-    background-color: #f8fafc;
+    background-color: white;
     padding: 10px;
     border-radius: 4px;
     margin-bottom: 12px;
@@ -1380,7 +1380,7 @@ footer .developer-info {
 }
 
 .summary-table th {
-    background-color: #f8fafc;
+    background-color: white;
     padding: 10px;
     text-align: left;
     font-weight: 500;
@@ -1394,7 +1394,7 @@ footer .developer-info {
 }
 
 .summary-table tbody tr:hover {
-    background-color: #f8fafc;
+    background-color: white;
 }
 
 .summary-table .best-row {
@@ -1559,9 +1559,72 @@ footer .developer-info {
     color: #9ca3af;
 }
 
+/* Naver Search Styles */
+.naver-search-container {
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    margin-bottom: 12px;
+}
+
+.search-input-wrapper {
+    display: flex;
+    gap: 4px;
+}
+
+.search-input {
+    width: 120px;
+    padding: 4px 6px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 11px;
+}
+
+.search-buttons {
+    display: flex;
+    gap: 3px;
+}
+
+.search-btn-icon {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    border-radius: 3px;
+    font-weight: bold;
+    font-size: 11px;
+    transition: all 0.2s;
+}
+
+.search-btn-icon.price-compare {
+    background: #03c75a;
+    color: white;
+}
+
+.search-btn-icon.price-compare:hover {
+    background: #02a04a;
+}
+
+.search-btn-icon.plus-store {
+    background: #8b5cf6;
+    color: white;
+}
+
+.search-btn-icon.plus-store:hover {
+    background: #7c3aed;
+}
+
+.quicklinks-separator {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 20px 0;
+}
+
 /* Review Analysis Styles */
 .review-upload-section {
-    background-color: #f8fafc;
+    background-color: white;
     padding: 16px;
     border-radius: 6px;
     margin-bottom: 20px;
@@ -1849,7 +1912,7 @@ footer .developer-info {
 .product-details {
     margin-bottom: 12px;
     padding: 8px;
-    background-color: #f8fafc;
+    background-color: white;
     border-radius: 4px;
 }
 
@@ -1877,7 +1940,7 @@ footer .developer-info {
     padding: 8px;
     margin: 0 -8px;
     border-radius: 4px;
-    background-color: #f8fafc;
+    background-color: white;
     margin-bottom: 8px;
 }
 

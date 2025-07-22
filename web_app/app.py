@@ -351,7 +351,12 @@ def save_review_data():
 
 @app.route('/')
 def index():
-    """Main dashboard page"""
+    """Main feed page"""
+    return render_template('feed.html')
+
+@app.route('/dashboard')
+def dashboard():
+    """Dashboard page"""
     return render_template('dashboard.html')
 
 @app.route('/api/data')
@@ -370,12 +375,14 @@ def get_data():
     # Filter by category if specified
     df_filtered = filter_by_category(df_processed, category) if category else df_processed
     
-    # Filter by product type (roll/puzzle)
+    # Filter by product type (roll/puzzle/pet)
     if product_type and not df_filtered.empty:
         if product_type == 'roll':
             df_filtered = df_filtered[df_filtered['product_category'].str.contains('롤매트', na=False)]
         elif product_type == 'puzzle':
             df_filtered = df_filtered[df_filtered['product_category'].str.contains('퍼즐매트', na=False)]
+        elif product_type == 'pet':
+            df_filtered = df_filtered[df_filtered['product_category'].str.contains('강아지매트', na=False)]
     
     # Always return all data without pagination
     data = df_filtered.to_dict('records')
@@ -407,12 +414,14 @@ def get_statistics():
     # Filter by category if specified
     df_filtered = filter_by_category(df_processed, category) if category else df_processed
     
-    # Filter by product type (roll/puzzle)
+    # Filter by product type (roll/puzzle/pet)
     if product_type and not df_filtered.empty:
         if product_type == 'roll':
             df_filtered = df_filtered[df_filtered['product_category'].str.contains('롤매트', na=False)]
         elif product_type == 'puzzle':
             df_filtered = df_filtered[df_filtered['product_category'].str.contains('퍼즐매트', na=False)]
+        elif product_type == 'pet':
+            df_filtered = df_filtered[df_filtered['product_category'].str.contains('강아지매트', na=False)]
     
     if df_filtered.empty:
         return jsonify({
@@ -478,12 +487,14 @@ def price_comparison():
     # Filter by category first if specified
     df_filtered = filter_by_category(df_processed, category) if category else df_processed
     
-    # Filter by product type (roll/puzzle)
+    # Filter by product type (roll/puzzle/pet)
     if product_type and not df_filtered.empty:
         if product_type == 'roll':
             df_filtered = df_filtered[df_filtered['product_category'].str.contains('롤매트', na=False)]
         elif product_type == 'puzzle':
             df_filtered = df_filtered[df_filtered['product_category'].str.contains('퍼즐매트', na=False)]
+        elif product_type == 'pet':
+            df_filtered = df_filtered[df_filtered['product_category'].str.contains('강아지매트', na=False)]
     
     # Then filter by thickness
     filtered = df_filtered[
@@ -747,6 +758,191 @@ def get_macro(filename):
         
         return content, 200, {'Content-Type': 'text/plain; charset=utf-8'}
         
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/feeds', methods=['GET'])
+def get_feeds():
+    """Get feed posts with pagination"""
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        
+        # Load feeds from JSON file
+        feeds_file = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'feeds', 'feeds.json')
+        
+        if not os.path.exists(feeds_file):
+            return jsonify({'feeds': [], 'total': 0, 'page': page, 'per_page': per_page})
+        
+        with open(feeds_file, 'r', encoding='utf-8') as f:
+            all_feeds = json.load(f)
+        
+        # Sort by created_at (newest first)
+        all_feeds.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        
+        # Paginate
+        total = len(all_feeds)
+        start = (page - 1) * per_page
+        end = start + per_page
+        feeds = all_feeds[start:end]
+        
+        return jsonify({
+            'feeds': feeds,
+            'total': total,
+            'page': page,
+            'per_page': per_page,
+            'has_more': end < total
+        })
+    except Exception as e:
+        print(f"Error getting feeds: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/feeds', methods=['POST'])
+def create_feed():
+    """Create a new feed post"""
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        if not data.get('content'):
+            return jsonify({'error': 'Content is required'}), 400
+        
+        # Create feed object
+        feed = {
+            'id': str(datetime.now().timestamp()).replace('.', ''),
+            'content': data['content'],
+            'feed_type': data.get('feed_type', 'general'),
+            'tags': data.get('tags', []),
+            'images': data.get('images', []),
+            'created_at': datetime.now().isoformat(),
+            'author': data.get('author', 'FollowScope')
+        }
+        
+        # Load existing feeds
+        feeds_file = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'feeds', 'feeds.json')
+        
+        if os.path.exists(feeds_file):
+            with open(feeds_file, 'r', encoding='utf-8') as f:
+                feeds = json.load(f)
+        else:
+            feeds = []
+        
+        # Add new feed
+        feeds.append(feed)
+        
+        # Save feeds
+        os.makedirs(os.path.dirname(feeds_file), exist_ok=True)
+        with open(feeds_file, 'w', encoding='utf-8') as f:
+            json.dump(feeds, f, ensure_ascii=False, indent=2)
+        
+        return jsonify(feed), 201
+    except Exception as e:
+        print(f"Error creating feed: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/feeds/<feed_id>', methods=['PUT'])
+def update_feed(feed_id):
+    """Update an existing feed post"""
+    try:
+        data = request.get_json()
+        
+        # Load existing feeds
+        feeds_file = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'feeds', 'feeds.json')
+        
+        if not os.path.exists(feeds_file):
+            return jsonify({'error': 'Feed not found'}), 404
+        
+        with open(feeds_file, 'r', encoding='utf-8') as f:
+            feeds = json.load(f)
+        
+        # Find and update the feed
+        feed_updated = False
+        for feed in feeds:
+            if feed['id'] == feed_id:
+                # Update fields
+                feed['content'] = data.get('content', feed['content'])
+                feed['feed_type'] = data.get('feed_type', feed.get('feed_type', 'general'))
+                feed['tags'] = data.get('tags', feed['tags'])
+                feed['updated_at'] = datetime.now().isoformat()
+                feed_updated = True
+                break
+        
+        if not feed_updated:
+            return jsonify({'error': 'Feed not found'}), 404
+        
+        # Save updated feeds
+        with open(feeds_file, 'w', encoding='utf-8') as f:
+            json.dump(feeds, f, ensure_ascii=False, indent=2)
+        
+        return jsonify({'message': 'Feed updated successfully'}), 200
+    except Exception as e:
+        print(f"Error updating feed: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/feeds/<feed_id>', methods=['DELETE'])
+def delete_feed(feed_id):
+    """Delete a feed post"""
+    try:
+        feeds_file = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'feeds', 'feeds.json')
+        
+        if not os.path.exists(feeds_file):
+            return jsonify({'error': 'Feed not found'}), 404
+        
+        with open(feeds_file, 'r', encoding='utf-8') as f:
+            feeds = json.load(f)
+        
+        # Filter out the feed to delete
+        feeds = [f for f in feeds if f.get('id') != feed_id]
+        
+        # Save updated feeds
+        with open(feeds_file, 'w', encoding='utf-8') as f:
+            json.dump(feeds, f, ensure_ascii=False, indent=2)
+        
+        return jsonify({'message': 'Feed deleted successfully'}), 200
+    except Exception as e:
+        print(f"Error deleting feed: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/upload-image', methods=['POST'])
+def upload_image():
+    """Handle image upload for feeds"""
+    try:
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image provided'}), 400
+        
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        
+        # Generate unique filename
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"{timestamp}_{secure_filename(file.filename)}"
+        
+        # Save image
+        upload_path = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'feeds', 'images')
+        os.makedirs(upload_path, exist_ok=True)
+        
+        filepath = os.path.join(upload_path, filename)
+        file.save(filepath)
+        
+        # Return relative path
+        relative_path = f"/api/feed-image/{filename}"
+        
+        return jsonify({'url': relative_path}), 200
+    except Exception as e:
+        print(f"Error uploading image: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/feed-image/<filename>')
+def serve_feed_image(filename):
+    """Serve feed images"""
+    try:
+        image_path = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'feeds', 'images', filename)
+        if os.path.exists(image_path):
+            from flask import send_file
+            return send_file(image_path)
+        else:
+            return jsonify({'error': 'Image not found'}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

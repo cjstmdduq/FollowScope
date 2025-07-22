@@ -13,6 +13,18 @@
     <!-- Sidebar Navigation -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-section">
+            <h3 class="sidebar-title">경쟁사 동향</h3>
+            <ul class="sidebar-menu">
+                <li>
+                    <button class="sidebar-btn" onclick="location.href='/'">
+                        <i class="fas fa-stream"></i>
+                        <span>Feed</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-section">
             <h3 class="sidebar-title">제품 비교</h3>
             <ul class="sidebar-menu">
                 <li>
@@ -65,6 +77,18 @@
                 </li>
             </ul>
         </div>
+        
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">관리</h3>
+            <ul class="sidebar-menu">
+                <li>
+                    <button class="sidebar-btn" onclick="location.href='/data'">
+                        <i class="fas fa-database"></i>
+                        <span>데이터센터</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
     </div>
 
     <!-- Quick Links Sidebar -->
@@ -93,6 +117,7 @@
                     <select id="productTypeSelect" class="form-select" onchange="onFiltersChange()">
                         <option value="roll" selected>롤매트</option>
                         <option value="puzzle">퍼즐매트</option>
+                        <option value="pet">애견롤매트</option>
                     </select>
                 </div>
             </div>
@@ -138,6 +163,7 @@
                     <select id="comparisonProductTypeSelect" class="form-select" onchange="updateComparison()">
                         <option value="roll" selected>롤매트</option>
                         <option value="puzzle">퍼즐매트</option>
+                        <option value="pet">애견롤매트</option>
                     </select>
                 </div>
             </div>
@@ -175,6 +201,7 @@
                     <select id="heatmapProductTypeSelect" class="form-select" onchange="updateHeatmap()">
                         <option value="roll" selected>롤매트</option>
                         <option value="puzzle">퍼즐매트</option>
+                        <option value="pet">애견롤매트</option>
                     </select>
                 </div>
             </div>
@@ -397,4 +424,5 @@
     </div>
 </div>
 
+<script src="{{ url_for('static', filename='js/pet-ranges.js') }}"></script>
 {% endblock %}

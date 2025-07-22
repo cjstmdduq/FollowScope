@@ -147,13 +147,29 @@ function initializeOverviewChart() {
         '리코코': 'rgba(255, 20, 147, 0.8)'
     };
     
+    // Check if this is pet mat data
+    const productTypeSelect = document.getElementById('productTypeSelect');
+    const isPetMat = productTypeSelect && productTypeSelect.value === 'pet';
+    
     // Group data by competitor
     const competitorData = {};
     allData.forEach(item => {
         if (!competitorData[item.Competitor]) {
             competitorData[item.Competitor] = [];
         }
-        competitorData[item.Competitor].push(item.Price_per_Volume);
+        
+        // For pet mats, calculate price based on 50cm standard
+        if (isPetMat && typeof calculatePetPricePerUnit === 'function') {
+            const standardPrice = calculatePetPricePerUnit(
+                item.Price,
+                item.Width_cm || 110,
+                item.Length_cm || 100,
+                item.Thickness_cm
+            );
+            competitorData[item.Competitor].push(standardPrice);
+        } else {
+            competitorData[item.Competitor].push(item.Price_per_Volume);
+        }
     });
     
     // Calculate average price per volume for each competitor
@@ -313,6 +329,11 @@ async function updateComparison() {
     const maxThickness = parseFloat(document.getElementById('thicknessMax').value);
     const productTypeSelect = document.getElementById('comparisonProductTypeSelect');
     const productType = productTypeSelect ? productTypeSelect.value : 'roll';
+    
+    // Update thickness ranges if product type is pet
+    if (typeof updateThicknessRanges === 'function') {
+        updateThicknessRanges(productType);
+    }
     
     // Check if product type changed for this tab
     if (productType !== tabProductTypes.comparison) {
@@ -586,6 +607,8 @@ async function updateHeatmap() {
                 return d.product_category && d.product_category.includes('롤매트');
             } else if (productType === 'puzzle') {
                 return d.product_category && d.product_category.includes('퍼즐매트');
+            } else if (productType === 'pet') {
+                return d.product_category && d.product_category.includes('강아지매트');
             }
             return true;
         });
@@ -626,10 +649,17 @@ function createAllCompetitorsHeatmap(data, thicknesses, widths) {
     // Check product type for display title
     const productTypeSelect = document.getElementById('heatmapProductTypeSelect');
     const productType = productTypeSelect ? productTypeSelect.value : 'roll';
+    const isPetMat = productType === 'pet';
     const isPuzzle = productType === 'puzzle';
     
     const title = document.createElement('h3');
-    title.textContent = isPuzzle ? '전체 경쟁사 가격 비교 (100x100cm 기준)' : '전체 경쟁사 가격 비교 (50cm 기준)';
+    if (isPuzzle) {
+        title.textContent = '전체 경쟁사 가격 비교 (100x100cm 기준)';
+    } else if (isPetMat) {
+        title.textContent = '전체 경쟁사 가격 비교 (110x50cm 기준)';
+    } else {
+        title.textContent = '전체 경쟁사 가격 비교 (50cm 기준)';
+    }
     title.style.textAlign = 'center';
     title.style.marginBottom = '10px';
     container.appendChild(title);
@@ -649,6 +679,13 @@ function createAllCompetitorsHeatmap(data, thicknesses, widths) {
         if (isPuzzle) {
             // For puzzle mats, show price as-is (already 100x100)
             displayPrice = product.Price;
+        } else if (isPetMat) {
+            // For pet mats, show price for standard 110x50cm unit
+            if (typeof calculatePetPricePerUnit === 'function') {
+                displayPrice = product.Price; // Already normalized to unit price
+            } else {
+                displayPrice = (product.Price / product.Length_cm) * 50;
+            }
         } else {
             // For roll mats, calculate price per 50cm
             displayPrice = (product.Price / product.Length_cm) * 50;

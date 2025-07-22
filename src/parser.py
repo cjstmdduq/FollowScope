@@ -8,10 +8,14 @@ import os
 from pathlib import Path
 
 
-def extract_product_attributes_from_csv(row):
+def extract_product_attributes_from_csv(row, category=None):
     """
     Extract product attributes from structured CSV data
     Handles both 2-stage and 3-stage data formats
+    
+    Args:
+        row: DataFrame row containing product data
+        category: Product category (e.g., '강아지매트', '롤매트')
     """
     attributes = {
         'design': None,
@@ -46,6 +50,9 @@ def extract_product_attributes_from_csv(row):
                 # Convert meters to cm
                 length_m = float(length_in_option1.group(1))
                 attributes['length'] = str(length_m * 100)
+                # For 에코폼, clear design if it contains width/length info
+                if width_in_option1 and length_in_option1:
+                    attributes['design'] = None
             
             # Check for puzzle mat pattern: "A타입(100x100x2.5cmx1장)" or "B타입(50x50x2.5cmx4장)"
             puzzle_pattern = re.search(r'[AB]타입\((\d+)x(\d+)x(\d+(?:\.\d+)?)cmx(\d+)장\)', option1_str)
@@ -85,23 +92,60 @@ def extract_product_attributes_from_csv(row):
                 simple_pattern = r'(\d+(?:\.\d+)?)\s*cm\s*/\s*(\d+)\s*cm'
                 # Pattern for "두께1.7cm / 폭80cm" format
                 korean_pattern = r'두께\s*(\d+(?:\.\d+)?)\s*cm\s*/\s*폭\s*(\d+)\s*cm'
+                # Pattern for pet mat format "6mm(폭110cm)" or "9mm(폭125cm)" - 따사룸
+                pet_pattern = r'(\d+(?:\.\d+)?)\s*mm\s*\(폭\s*(\d+)\s*cm\)'
+                # Pattern for pet mat format "6mm / 110cm" - 리포소
+                pet_pattern2 = r'(\d+(?:\.\d+)?)\s*mm\s*/\s*(\d+)\s*cm'
+                # Pattern for T notation "0.6cm(6T)" - 딩굴
+                t_pattern = r'(\d+(?:\.\d+)?)\s*cm\s*\(\d+T\)'
+                # Pattern for T notation reverse "9T(9mm)" or "15T(1.5cm)" - 로하우스
+                t_pattern2 = r'\d+T\s*\((\d+(?:\.\d+)?)\s*(mm|cm)\)'
                 
-                # Try simple pattern first
-                match = re.search(simple_pattern, option2_str)
-                if match:
-                    attributes['thickness'] = match.group(1)
-                    attributes['width'] = match.group(2)
+                # Try pet patterns first for pet mats
+                pet_match = re.search(pet_pattern, option2_str)
+                pet_match2 = re.search(pet_pattern2, option2_str)
+                t_match = re.search(t_pattern, option2_str)
+                t_match2 = re.search(t_pattern2, option2_str)
+                
+                if pet_match:
+                    # Convert mm to cm for thickness - 따사룸
+                    thickness_mm = float(pet_match.group(1))
+                    attributes['thickness'] = str(thickness_mm / 10)
+                    attributes['width'] = pet_match.group(2)
+                elif pet_match2:
+                    # Convert mm to cm for thickness - 리포소
+                    thickness_mm = float(pet_match2.group(1))
+                    attributes['thickness'] = str(thickness_mm / 10)
+                    attributes['width'] = pet_match2.group(2)
+                elif t_match:
+                    # T notation pattern 1 - 딩굴
+                    attributes['thickness'] = t_match.group(1)
+                    # Width might be in 옵션3 for 딩굴
+                elif t_match2:
+                    # T notation pattern 2 - 로하우스
+                    value = float(t_match2.group(1))
+                    unit = t_match2.group(2)
+                    if unit == 'mm':
+                        attributes['thickness'] = str(value / 10)
+                    else:
+                        attributes['thickness'] = str(value)
                 else:
-                    # Try Korean pattern
-                    match = re.search(korean_pattern, option2_str)
+                    # Try simple pattern
+                    match = re.search(simple_pattern, option2_str)
                     if match:
                         attributes['thickness'] = match.group(1)
                         attributes['width'] = match.group(2)
                     else:
-                        # 파크론 파일: 옵션2에서 폭만 추출 (예: "50cm")
-                        width_only_match = re.search(r'(\d+)\s*cm', option2_str)
-                        if width_only_match:
-                            attributes['width'] = width_only_match.group(1)
+                        # Try Korean pattern
+                        match = re.search(korean_pattern, option2_str)
+                        if match:
+                            attributes['thickness'] = match.group(1)
+                            attributes['width'] = match.group(2)
+                        else:
+                            # 파크론 파일: 옵션2에서 폭만 추출 (예: "50cm")
+                            width_only_match = re.search(r'(\d+)\s*cm', option2_str)
+                            if width_only_match:
+                                attributes['width'] = width_only_match.group(1)
             else:
                 # 2-stage format: 옵션2 contains size info or color/thickness combo
                 
@@ -205,33 +249,43 @@ def extract_product_attributes_from_csv(row):
     if is_3stage and pd.notna(row.get('옵션3')):
         length_str = str(row['옵션3']).strip()
         if length_str:
-            # Handle "Xm" or "XmYcm" format
-            meter_pattern = r'(\d+(?:\.\d+)?)\s*m'
-            cm_pattern = r'(\d+)\s*cm'
+            # Check for dimension patterns like "폭 110cm x 50cm" (딩굴) or "110cm x 50cm" (로하우스)
+            dimension_pattern = r'(?:폭\s*)?(\d+)\s*cm\s*x\s*(\d+)\s*cm'
+            dim_match = re.search(dimension_pattern, length_str)
             
-            length_cm = 0
-            
-            # First check if it's a combined format like "1m50cm"
-            combined_pattern = r'(\d+)\s*m\s*(\d+)\s*cm'
-            combined_match = re.search(combined_pattern, length_str)
-            
-            if combined_match:
-                # Handle "XmYcm" format
-                length_cm = float(combined_match.group(1)) * 100 + float(combined_match.group(2))
+            if dim_match:
+                # This contains both width and length
+                if not attributes['width']:
+                    attributes['width'] = dim_match.group(1)
+                attributes['length'] = dim_match.group(2)
             else:
-                # Check for meters only
-                meter_match = re.search(meter_pattern, length_str)
-                if meter_match:
-                    length_cm += float(meter_match.group(1)) * 100
+                # Handle "Xm" or "XmYcm" format
+                meter_pattern = r'(\d+(?:\.\d+)?)\s*m'
+                cm_pattern = r'(\d+)\s*cm'
                 
-                # Check for cm only (with or without '길이' prefix)
-                cm_only_pattern = r'(?:길이\s*)?(\d+)\s*cm'
-                cm_match = re.search(cm_only_pattern, length_str)
-                if cm_match and length_cm == 0:  # Only if no meters found
-                    length_cm = float(cm_match.group(1))
-            
-            if length_cm > 0:
-                attributes['length'] = str(length_cm)
+                length_cm = 0
+                
+                # First check if it's a combined format like "1m50cm"
+                combined_pattern = r'(\d+)\s*m\s*(\d+)\s*cm'
+                combined_match = re.search(combined_pattern, length_str)
+                
+                if combined_match:
+                    # Handle "XmYcm" format
+                    length_cm = float(combined_match.group(1)) * 100 + float(combined_match.group(2))
+                else:
+                    # Check for meters only
+                    meter_match = re.search(meter_pattern, length_str)
+                    if meter_match:
+                        length_cm += float(meter_match.group(1)) * 100
+                    
+                    # Check for cm only (with or without '길이' prefix)
+                    cm_only_pattern = r'(?:길이\s*)?(\d+)\s*cm'
+                    cm_match = re.search(cm_only_pattern, length_str)
+                    if cm_match and length_cm == 0:  # Only if no meters found
+                        length_cm = float(cm_match.group(1))
+                
+                if length_cm > 0:
+                    attributes['length'] = str(length_cm)
     
     # Extract price from 최종가격
     if pd.notna(row.get('최종가격')):
@@ -342,7 +396,8 @@ def get_category_from_path(file_path):
         'puzzle': '퍼즐매트', 
         'tpu': 'TPU매트',
         'double_side': '양면매트',
-        'folder': '폴더매트'
+        'folder': '폴더매트',
+        'pet': '강아지매트'
     }
     
     # Check if any part of the path contains a valid category
@@ -404,10 +459,13 @@ def process_raw_data(raw_data_path, rules):
                    (pd.isna(row.get('옵션3')) or not str(row.get('옵션3')).strip()):
                     continue
                 
+                # Get category for this file
+                file_category = get_category_from_path(str(file_path))
+                
                 # Extract attributes based on file type
                 if '옵션1' in df.columns and '옵션2' in df.columns:
                     # Structured CSV format
-                    attrs = extract_product_attributes_from_csv(row)
+                    attrs = extract_product_attributes_from_csv(row, category=file_category)
                 else:
                     # Unstructured format (for potential Excel files)
                     text = ' '.join([str(val) for val in row.values if pd.notna(val)])
@@ -459,10 +517,20 @@ def process_raw_data(raw_data_path, rules):
                         # Skip if we can't determine length
                         continue
                 
+                # Get product category from directory path
+                product_category = get_category_from_path(file_path)
+                
+                # For pet mats, adjust price if length is 100cm (normalize to 50cm standard)
+                if product_category == '강아지매트' and length_cm == 100:
+                    # Adjust to 50cm standard for price comparison
+                    length_cm = 50
+                    price = float(attrs['price']) / 2  # Half the price for half the length
+                else:
+                    price = float(attrs['price'])
+                
                 # Calculate derived metrics
                 area_cm2 = width_cm * length_cm
                 volume_cm3 = thickness_cm * width_cm * length_cm
-                price = float(attrs['price'])
                 price_per_volume = price / volume_cm3 if volume_cm3 > 0 else None
                 
                 # Add to data list
@@ -478,8 +546,8 @@ def process_raw_data(raw_data_path, rules):
                     'Price_per_Volume': price_per_volume
                 }
                 
-                # Get product category from directory path
-                data_item['product_category'] = get_category_from_path(file_path)
+                # Add product category
+                data_item['product_category'] = product_category
                 
                 all_data.append(data_item)
                 
