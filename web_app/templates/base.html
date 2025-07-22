@@ -67,6 +67,7 @@
 
     <!-- Custom JavaScript -->
     {% if request.endpoint not in ['data_page', 'upload_page'] %}
+    <script src="{{ url_for('static', filename='js/pet-ranges.js') }}"></script>
     <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
     <script src="{{ url_for('static', filename='js/purchase_simulation.js') }}"></script>
     {% endif %}
