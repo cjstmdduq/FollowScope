@@ -33,6 +33,12 @@ Thumbs.db
 !FollowScope/data/products/**/*.csv
 FollowScope/data/processed/*.csv
 
+# Dynamic data files
+FollowScope/data/feeds/feeds.json
+FollowScope/data/live/*.json
+FollowScope/data/coupons/*.json
+FollowScope/data/reviews/*.json
+
 # Jupyter Notebook
 .ipynb_checkpoints
 
