@@ -91,6 +91,9 @@ async function loadData(tab, productType) {
         }
         // Heatmap is initialized separately when tab is shown
         
+        // Update thickness ranges based on product type
+        updateThicknessRanges(productType);
+        
         // Set thickness range sliders based on product type
         if (stats.thickness_range) {
             const minThickness = stats.thickness_range.min;

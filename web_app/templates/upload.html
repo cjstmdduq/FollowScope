@@ -51,25 +51,25 @@
             <h3 class="sidebar-title">데이터 업로드</h3>
             <ul class="sidebar-menu">
                 <li>
-                    <button class="sidebar-btn" onclick="showUploadTab('product')">
+                    <button class="sidebar-btn" onclick="showUploadTab('product', event)">
                         <i class="fas fa-box"></i>
                         <span>제품 데이터</span>
                     </button>
                 </li>
                 <li>
-                    <button class="sidebar-btn" onclick="showUploadTab('review')">
+                    <button class="sidebar-btn" onclick="showUploadTab('review', event)">
                         <i class="fas fa-star"></i>
                         <span>리뷰 데이터</span>
                     </button>
                 </li>
                 <li>
-                    <button class="sidebar-btn" onclick="showUploadTab('live')">
+                    <button class="sidebar-btn" onclick="showUploadTab('live', event)">
                         <i class="fas fa-calendar-alt"></i>
                         <span>라이브 데이터</span>
                     </button>
                 </li>
                 <li>
-                    <button class="sidebar-btn" onclick="showUploadTab('coupon')">
+                    <button class="sidebar-btn" onclick="showUploadTab('coupon', event)">
                         <i class="fas fa-ticket-alt"></i>
                         <span>쿠폰 데이터</span>
                     </button>
@@ -81,19 +81,19 @@
             <h3 class="sidebar-title">데이터 도구</h3>
             <ul class="sidebar-menu">
                 <li>
-                    <button class="sidebar-btn" onclick="showUploadTab('live')">
+                    <button class="sidebar-btn" onclick="showUploadTab('live', event)">
                         <i class="fas fa-broadcast-tower"></i>
                         <span>라이브 데이터</span>
                     </button>
                 </li>
                 <li>
-                    <button class="sidebar-btn" onclick="showUploadTab('macros')">
+                    <button class="sidebar-btn" onclick="showUploadTab('macros', event)">
                         <i class="fas fa-code"></i>
                         <span>크롤링 도구</span>
                     </button>
                 </li>
                 <li>
-                    <button class="sidebar-btn" onclick="showUploadTab('status')">
+                    <button class="sidebar-btn" onclick="showUploadTab('status', event)">
                         <i class="fas fa-chart-bar"></i>
                         <span>데이터 현황</span>
                     </button>
@@ -186,7 +186,7 @@
                     <button class="btn-secondary" onclick="exportProductData()">
                         <i class="fas fa-download"></i> 내보내기
                     </button>
-                    <button class="btn-secondary" onclick="refreshProductData()">
+                    <button class="btn-secondary" onclick="refreshProductData(event)">
                         <i class="fas fa-sync"></i> 새로고침
                     </button>
                 </div>
@@ -225,7 +225,7 @@
                         </select>
                     </div>
                     <div class="action-buttons">
-                        <button class="btn-refresh" onclick="refreshLiveData()">
+                        <button class="btn-refresh" onclick="refreshLiveData(event)">
                             <i class="fas fa-sync-alt"></i> 새로고침
                         </button>
                         <button class="btn-export" onclick="exportLiveData()">
@@ -419,7 +419,7 @@
                 <button class="btn-secondary" onclick="downloadTemplate()">
                     <i class="fas fa-download"></i> 템플릿 다운로드
                 </button>
-                <button class="btn-secondary" onclick="reloadAllData()">
+                <button class="btn-secondary" onclick="reloadAllData(event)">
                     <i class="fas fa-sync"></i> 데이터 새로고침
                 </button>
             </div>
@@ -1156,7 +1156,7 @@
 
 <script>
 // Tab switching for sidebar
-function showUploadTab(type) {
+function showUploadTab(type, event) {
     // Remove active class from all sidebar buttons in data sections only
     document.querySelectorAll('.sidebar-section:nth-child(n+4) .sidebar-btn').forEach(btn => {
         btn.classList.remove('active');
@@ -1168,7 +1168,9 @@ function showUploadTab(type) {
     });
     
     // Add active class to clicked button
-    event.target.closest('.sidebar-btn').classList.add('active');
+    if (event && event.target) {
+        event.target.closest('.sidebar-btn').classList.add('active');
+    }
     
     // Show corresponding section
     if (type === 'live') {
@@ -1206,7 +1208,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadMacros();
     
     // Show status tab by default
-    showUploadTab('status');
+    showUploadTab('status', null);
 });
 
 function setupUploadArea(box) {
@@ -1383,7 +1385,7 @@ async function loadDataStatus() {
     }
 }
 
-async function reloadAllData() {
+async function reloadAllData(event) {
     const btn = event.target.closest('button');
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 새로고침 중...';
@@ -1585,7 +1587,7 @@ function sortProductTable(column) {
     renderProductTable();
 }
 
-async function refreshProductData() {
+async function refreshProductData(event) {
     const btn = event.target.closest('button');
     const originalHTML = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 새로고침 중...';
@@ -1683,7 +1685,7 @@ async function loadMacros() {
                         <h3>${macro.display_name}</h3>
                         <i class="fas fa-chevron-down expand-icon" id="icon-${macro.id}"></i>
                     </div>
-                    <button class="copy-btn" onclick="event.stopPropagation(); copyMacro('${macro.id}')">
+                    <button class="copy-btn" onclick="event.stopPropagation(); copyMacro('${macro.id}', event)">
                         <i class="fas fa-copy"></i> 복사
                     </button>
                 </div>
@@ -1766,7 +1768,7 @@ function toggleMacro(macroId) {
 }
 
 // Copy macro to clipboard
-function copyMacro(macroId) {
+function copyMacro(macroId, event) {
     const macroElement = document.getElementById(macroId);
     const macroText = macroElement.textContent;
     
@@ -1907,7 +1909,7 @@ function sortLiveTable(column) {
     renderLiveTable();
 }
 
-async function refreshLiveData() {
+async function refreshLiveData(event) {
     const refreshBtn = event.target.closest('.btn-refresh');
     refreshBtn.classList.add('loading');
     
