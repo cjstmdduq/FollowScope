@@ -20,5 +20,23 @@
     "author": "FollowScope",
     "feed_type": "general",
     "updated_at": "2025-07-22T16:06:21.327000"
+  },
+  {
+    "id": "1753170503687843",
+    "content": "변경내역을 기록하는 FEED 기능과 \n애견롤매트 데이터가 추가되었습니다. 😊",
+    "feed_type": "patch",
+    "tags": [],
+    "images": [],
+    "created_at": "2025-07-22T07:48:23.687856",
+    "author": "FollowScope"
+  },
+  {
+    "id": "1753233015395323",
+    "content": "25.07.23 10:00 현시점 기준\n주요경쟁사 가격변동 및 프로모션쿠폰 변동사항은 없습니다. \nF/U 사항 : 리포소 알림받기 쿠폰 만료 D-4 ← 리포소 할인에 대한 변동이 예상됩니다.",
+    "feed_type": "general",
+    "tags": [],
+    "images": [],
+    "created_at": "2025-07-23T01:10:15.395335",
+    "author": "FollowScope"
   }
 ]
