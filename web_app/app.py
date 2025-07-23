@@ -304,7 +304,7 @@ def load_review_data():
     review_data = []
     
     try:
-        categories = ['roll', 'puzzle', 'tpu', 'double_side', 'folder']
+        categories = ['roll', 'puzzle', 'tpu', 'double_side', 'folder', 'pet']
         
         for category in categories:
             category_path = os.path.join(REVIEW_DATA_PATH, category)
