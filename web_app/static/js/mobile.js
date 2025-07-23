@@ -11,8 +11,20 @@ function toggleMobileSidebar() {
     }
 }
 
-// Make function available globally
+// Toggle mobile quicklinks
+function toggleMobileQuicklinks() {
+    const quicklinks = document.getElementById('quickLinksPanel');
+    const overlay = document.querySelector('.quicklinks-overlay');
+    
+    if (quicklinks && overlay) {
+        quicklinks.classList.toggle('mobile-active');
+        overlay.classList.toggle('active');
+    }
+}
+
+// Make functions available globally
 window.toggleMobileSidebar = toggleMobileSidebar;
+window.toggleMobileQuicklinks = toggleMobileQuicklinks;
 
 // Close sidebar when clicking on a menu item
 document.addEventListener('DOMContentLoaded', function() {

@@ -36,6 +36,14 @@ body {
     display: none;
 }
 
+.mobile-quicklinks-toggle {
+    display: none;
+}
+
+.quicklinks-overlay {
+    display: none;
+}
+
 /* Sidebar Overlay - Hidden by default */
 .sidebar-overlay {
     display: none;
@@ -1561,40 +1569,42 @@ footer .developer-info {
 
 /* Naver Search Styles */
 .naver-search-container {
-    padding: 8px;
+    padding: 12px;
     background: #f8f9fa;
-    border-radius: 4px;
-    margin-bottom: 12px;
+    border-radius: 8px;
+    margin-bottom: 16px;
 }
 
 .search-input-wrapper {
     display: flex;
-    gap: 4px;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .search-input {
-    width: 120px;
-    padding: 4px 6px;
+    width: 100%;
+    padding: 8px 12px;
     border: 1px solid #ddd;
-    border-radius: 3px;
-    font-size: 11px;
+    border-radius: 6px;
+    font-size: 13px;
 }
 
 .search-buttons {
     display: flex;
-    gap: 3px;
+    gap: 6px;
+    justify-content: center;
 }
 
 .search-btn-icon {
-    width: 22px;
-    height: 22px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     text-decoration: none;
-    border-radius: 3px;
+    border-radius: 6px;
     font-weight: bold;
-    font-size: 11px;
+    font-size: 14px;
     transition: all 0.2s;
 }
 
@@ -1614,6 +1624,15 @@ footer .developer-info {
 
 .search-btn-icon.plus-store:hover {
     background: #7c3aed;
+}
+
+.search-btn-icon.shopping-live {
+    background: #ff4757;
+    color: white;
+}
+
+.search-btn-icon.shopping-live:hover {
+    background: #ff3838;
 }
 
 .quicklinks-separator {

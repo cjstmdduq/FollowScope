@@ -132,6 +132,7 @@ function initializeQuickLinks() {
             <div class="search-buttons">
                 <a href="#" id="priceCompareLink" class="search-btn-icon price-compare" target="_blank" title="가격비교">N</a>
                 <a href="#" id="plusStoreLink" class="search-btn-icon plus-store" target="_blank" title="플러스스토어">+</a>
+                <a href="#" id="shoppingLiveLink" class="search-btn-icon shopping-live" target="_blank" title="쇼핑라이브"><i class="fas fa-video"></i></a>
             </div>
         </div>
     `;
@@ -197,12 +198,14 @@ function setupNaverSearch() {
     const searchInput = document.getElementById('naverSearchInput');
     const priceCompareLink = document.getElementById('priceCompareLink');
     const plusStoreLink = document.getElementById('plusStoreLink');
+    const shoppingLiveLink = document.getElementById('shoppingLiveLink');
     
     // Update links when input changes
     function updateLinks() {
         const query = encodeURIComponent(searchInput.value);
         priceCompareLink.href = `https://search.shopping.naver.com/search/all?query=${query}&frm=NVSCPRO&nl-ts-pid=jc8Hqdqo1SossD58I6CssssstJ0-084716&bt=-1`;
         plusStoreLink.href = `https://search.shopping.naver.com/ns/search?query=${query}`;
+        shoppingLiveLink.href = `https://shoppinglive.naver.com/search/lives?query=${query}`;
     }
     
     // Update links when input changes
