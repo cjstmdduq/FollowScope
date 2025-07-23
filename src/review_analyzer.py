@@ -20,7 +20,7 @@ class ReviewAnalyzer:
     
     def load_review_data(self):
         """리뷰 데이터 로드"""
-        categories = ['roll', 'puzzle', 'tpu', 'double_side', 'folder']
+        categories = ['roll', 'puzzle', 'tpu', 'double_side', 'folder', 'pet']
         
         for category in categories:
             category_path = self.review_data_path / category
