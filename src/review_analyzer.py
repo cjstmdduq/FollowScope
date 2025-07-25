@@ -81,13 +81,34 @@ class ReviewAnalyzer:
         return filename.split()[0] if filename.split() else 'Unknown'
     
     
-    def calculate_review_growth_rate(self, category='roll', days=30):
-        """리뷰 상승률 계산"""
+    def calculate_review_growth_rate(self, category='roll', days=30, start_date=None, end_date=None):
+        """리뷰 상승률 계산
+        
+        Args:
+            category (str): 분석할 카테고리
+            days (int): 분석할 기간 (일) - start_date와 end_date가 None일 때만 사용
+            start_date (str): 시작 날짜 (YYYY-MM-DD 형식)
+            end_date (str): 종료 날짜 (YYYY-MM-DD 형식)
+        """
         if category not in self.review_data:
             return {}
         
         growth_data = {}
-        current_date = datetime.now()
+        
+        # 날짜 범위 설정
+        if start_date and end_date:
+            # 특정 기간 조회
+            start_dt = pd.to_datetime(start_date)
+            end_dt = pd.to_datetime(end_date)
+            current_date = end_dt
+            # 실제 기간 계산
+            actual_days = (end_dt - start_dt).days + 1
+        else:
+            # 기본 기간 조회 (최근 N일)
+            current_date = datetime.now()
+            start_dt = current_date - timedelta(days=days)
+            end_dt = current_date
+            actual_days = days
         
         for competitor, df in self.review_data[category].items():
             if df.empty:
@@ -101,10 +122,10 @@ class ReviewAnalyzer:
             # 디버깅: 일별 리뷰 데이터 확인
             print(f"  {competitor}: Total {len(daily_reviews)} days with reviews")
             
-            # 오늘 기준으로 날짜 범위 생성 (데이터 존재 여부와 관계없이)
+            # 설정된 기간으로 날짜 범위 생성
             date_range = pd.date_range(
-                start=current_date - timedelta(days=days),
-                end=current_date,
+                start=start_dt,
+                end=end_dt,
                 freq='D'
             )
             
@@ -126,11 +147,11 @@ class ReviewAnalyzer:
             
             # 디버깅: 필터링된 데이터 확인
             if merged_df['review_count'].sum() == 0:
-                print(f"  WARNING: {competitor} has no reviews in the selected period ({days} days)")
+                print(f"  WARNING: {competitor} has no reviews in the selected period ({actual_days} days)")
                 print(f"    Date range: {date_range[0].date()} to {date_range[-1].date()}")
                 print(f"    Available data: {df['작성일'].min().date()} to {df['작성일'].max().date()}")
             else:
-                print(f"    {competitor}: Found {merged_df['review_count'].sum():.0f} reviews in {days} days period")
+                print(f"    {competitor}: Found {merged_df['review_count'].sum():.0f} reviews in {actual_days} days period")
             
             # 7일 이동평균 계산
             merged_df['ma_7d'] = merged_df['review_count'].rolling(window=7, min_periods=1).mean()
@@ -196,9 +217,9 @@ class ReviewAnalyzer:
         
         return summary
     
-    def get_chart_data(self, category='roll', period_days=30):
+    def get_chart_data(self, category='roll', period_days=30, start_date=None, end_date=None):
         """차트용 데이터 생성 (기간에 따른 그룹화)"""
-        growth_data = self.calculate_review_growth_rate(category, period_days)
+        growth_data = self.calculate_review_growth_rate(category, period_days, start_date, end_date)
         
         chart_data = {
             'labels': [],
@@ -209,11 +230,18 @@ class ReviewAnalyzer:
             return chart_data
         
         # 기간에 따른 그룹화 간격 결정
-        if period_days <= 30:
+        actual_period = period_days
+        if start_date and end_date:
+            # 특정 기간 조회 시 실제 기간 계산
+            start_dt = pd.to_datetime(start_date)
+            end_dt = pd.to_datetime(end_date)
+            actual_period = (end_dt - start_dt).days + 1
+            
+        if actual_period <= 30:
             group_days = 1  # 1일 단위
-        elif period_days <= 90:
+        elif actual_period <= 90:
             group_days = 3  # 3일 단위
-        elif period_days <= 180:
+        elif actual_period <= 180:
             group_days = 7  # 7일 단위
         else:
             group_days = 10  # 10일 단위
@@ -243,9 +271,9 @@ class ReviewAnalyzer:
         dates = grouped_data[first_competitor]['date']
         
         # 라벨 형식 결정
-        if period_days <= 30:
+        if actual_period <= 30:
             chart_data['labels'] = [d.strftime('%m-%d') for d in dates]
-        elif period_days <= 90:
+        elif actual_period <= 90:
             chart_data['labels'] = [d.strftime('%m-%d') for d in dates]
         else:
             chart_data['labels'] = [d.strftime('%m/%d') for d in dates]

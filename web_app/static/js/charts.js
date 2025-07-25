@@ -2269,6 +2269,31 @@ function updateReviewSummary(trends) {
 }
 
 function updateReviewCharts() {
+    // 특정 기간 선택 시 날짜 입력 필드 표시/숨김
+    const period = document.getElementById('reviewPeriod')?.value;
+    const customDateRange = document.getElementById('customDateRange');
+    
+    if (period === 'custom') {
+        customDateRange.style.display = 'block';
+        
+        // 기본값 설정 (종료일: 오늘, 시작일: 30일 전)
+        const today = new Date();
+        const thirtyDaysAgo = new Date(today);
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        
+        if (!startDateInput.value) {
+            startDateInput.value = thirtyDaysAgo.toISOString().split('T')[0];
+        }
+        if (!endDateInput.value) {
+            endDateInput.value = today.toISOString().split('T')[0];
+        }
+    } else {
+        customDateRange.style.display = 'none';
+    }
+    
     loadReviewTrends();
 }
 
@@ -2280,7 +2305,28 @@ function loadReviewTrends() {
     const productType = document.getElementById('reviewProductTypeSelect')?.value || 'roll';
     const period = document.getElementById('reviewPeriod')?.value || '30';
     
-    fetch(`/api/review-trends?category=${productType}&period=${period}`)
+    // API URL 구성
+    let apiUrl = `/api/review-trends?category=${productType}&period=${period}`;
+    
+    // 특정 기간 조회인 경우 날짜 파라미터 추가
+    if (period === 'custom') {
+        const startDate = document.getElementById('startDate')?.value;
+        const endDate = document.getElementById('endDate')?.value;
+        
+        if (!startDate || !endDate) {
+            alert('시작 날짜와 종료 날짜를 모두 선택해주세요.');
+            return;
+        }
+        
+        if (new Date(startDate) > new Date(endDate)) {
+            alert('시작 날짜는 종료 날짜보다 빨라야 합니다.');
+            return;
+        }
+        
+        apiUrl += `&start_date=${startDate}&end_date=${endDate}`;
+    }
+    
+    fetch(apiUrl)
         .then(response => response.json())
         .then(data => {
             console.log('Review trends data:', data);

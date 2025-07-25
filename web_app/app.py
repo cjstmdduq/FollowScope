@@ -688,6 +688,8 @@ def get_review_trends():
     """Get review trends data using ReviewAnalyzer"""
     category = request.args.get('category', 'roll')
     period = request.args.get('period', '30')
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
     
     try:
         analyzer = ReviewAnalyzer(REVIEW_DATA_PATH)
@@ -696,7 +698,7 @@ def get_review_trends():
         # Get review trends analysis
         results = {
             'summary': analyzer.get_review_trends_summary(category),
-            'chart_data': analyzer.get_chart_data(category, period_days)
+            'chart_data': analyzer.get_chart_data(category, period_days, start_date, end_date)
         }
         
         return jsonify(results)

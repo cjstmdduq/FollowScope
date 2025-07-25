@@ -1651,14 +1651,49 @@ footer .developer-info {
 
 .review-controls {
     display: flex;
-    gap: 20px;
-    align-items: center;
+    flex-direction: column;
+    gap: 15px;
     margin-bottom: 20px;
     padding: 16px;
     background-color: white;
     border-radius: 6px;
     box-shadow: none;
     border: 1px solid var(--border-color);
+}
+
+.review-controls > div {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.custom-date-range {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.custom-date-range label {
+    font-weight: 500;
+    color: var(--dark-color);
+    white-space: nowrap;
+    margin-right: 5px;
+}
+
+.custom-date-range input[type="date"] {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s ease;
+}
+
+.custom-date-range input[type="date"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .date-range-selector label,
