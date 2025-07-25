@@ -2269,11 +2269,8 @@ function updateReviewSummary(trends) {
 }
 
 function updateReviewCharts() {
-    // 고정 기간 선택 시 바로 차트 업데이트
-    const period = document.getElementById('reviewPeriod')?.value;
-    if (period !== 'custom') {
-        loadReviewTrends();
-    }
+    // 모든 경우에 차트 업데이트 (특정 기간도 포함)
+    loadReviewTrends();
 }
 
 function toggleCustomDateRange() {
@@ -2318,7 +2315,11 @@ function applyCustomDateRange() {
         return;
     }
     
-    loadReviewTrends();
+    console.log('Applying custom date range:', startDate, 'to', endDate);
+    
+    // loadReviewTrends를 직접 호출하는 대신, 기존 updateReviewCharts 사용
+    // 이렇게 하면 updateReviewCountChart 등이 제대로 호출됨
+    updateReviewCharts();
 }
 
 // Review trends charts globals
