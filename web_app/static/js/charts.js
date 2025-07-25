@@ -2302,8 +2302,12 @@ function toggleCustomDateRange() {
 }
 
 function applyCustomDateRange() {
+    console.log('applyCustomDateRange called');
+    
     const startDate = document.getElementById('startDate')?.value;
     const endDate = document.getElementById('endDate')?.value;
+    
+    console.log('Start date:', startDate, 'End date:', endDate);
     
     if (!startDate || !endDate) {
         alert('시작 날짜와 종료 날짜를 모두 선택해주세요.');
@@ -2317,9 +2321,8 @@ function applyCustomDateRange() {
     
     console.log('Applying custom date range:', startDate, 'to', endDate);
     
-    // loadReviewTrends를 직접 호출하는 대신, 기존 updateReviewCharts 사용
-    // 이렇게 하면 updateReviewCountChart 등이 제대로 호출됨
-    updateReviewCharts();
+    // 직접 loadReviewTrends 호출해보기
+    loadReviewTrends();
 }
 
 // Review trends charts globals
@@ -2327,8 +2330,12 @@ let reviewCountChart = null;
 let marketShareChart = null;
 
 function loadReviewTrends() {
+    console.log('loadReviewTrends called');
+    
     const productType = document.getElementById('reviewProductTypeSelect')?.value || 'roll';
     const period = document.getElementById('reviewPeriod')?.value || '30';
+    
+    console.log('Product type:', productType, 'Period:', period);
     
     // API URL 구성
     let apiUrl = `/api/review-trends?category=${productType}&period=${period}`;
@@ -2338,18 +2345,24 @@ function loadReviewTrends() {
         const startDate = document.getElementById('startDate')?.value;
         const endDate = document.getElementById('endDate')?.value;
         
+        console.log('Custom period - Start:', startDate, 'End:', endDate);
+        
         if (!startDate || !endDate) {
+            console.error('Missing dates for custom period');
             alert('시작 날짜와 종료 날짜를 모두 선택해주세요.');
             return;
         }
         
         if (new Date(startDate) > new Date(endDate)) {
+            console.error('Invalid date range');
             alert('시작 날짜는 종료 날짜보다 빨라야 합니다.');
             return;
         }
         
         apiUrl += `&start_date=${startDate}&end_date=${endDate}`;
     }
+    
+    console.log('API URL:', apiUrl);
     
     fetch(apiUrl)
         .then(response => response.json())
