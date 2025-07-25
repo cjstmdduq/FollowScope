@@ -2269,12 +2269,19 @@ function updateReviewSummary(trends) {
 }
 
 function updateReviewCharts() {
-    // 특정 기간 선택 시 날짜 입력 필드 표시/숨김
+    // 고정 기간 선택 시 바로 차트 업데이트
+    const period = document.getElementById('reviewPeriod')?.value;
+    if (period !== 'custom') {
+        loadReviewTrends();
+    }
+}
+
+function toggleCustomDateRange() {
     const period = document.getElementById('reviewPeriod')?.value;
     const customDateRange = document.getElementById('customDateRange');
     
     if (period === 'custom') {
-        customDateRange.style.display = 'block';
+        customDateRange.style.display = 'flex';
         
         // 기본값 설정 (종료일: 오늘, 시작일: 30일 전)
         const today = new Date();
@@ -2292,6 +2299,23 @@ function updateReviewCharts() {
         }
     } else {
         customDateRange.style.display = 'none';
+        // 고정 기간 선택 시 바로 차트 업데이트
+        loadReviewTrends();
+    }
+}
+
+function applyCustomDateRange() {
+    const startDate = document.getElementById('startDate')?.value;
+    const endDate = document.getElementById('endDate')?.value;
+    
+    if (!startDate || !endDate) {
+        alert('시작 날짜와 종료 날짜를 모두 선택해주세요.');
+        return;
+    }
+    
+    if (new Date(startDate) > new Date(endDate)) {
+        alert('시작 날짜는 종료 날짜보다 빨라야 합니다.');
+        return;
     }
     
     loadReviewTrends();

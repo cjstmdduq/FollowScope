@@ -1661,17 +1661,34 @@ footer .developer-info {
     border: 1px solid var(--border-color);
 }
 
-.review-controls > div {
+.review-controls-row {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.review-controls > div:not(.review-controls-row) {
     display: flex;
     gap: 20px;
     align-items: center;
 }
 
-.custom-date-range {
+.date-range-selector {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-top: 10px;
+}
+
+.custom-date-range {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    margin-left: 20px;
+    padding: 10px 15px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
 }
 
 .custom-date-range label {
@@ -1679,21 +1696,44 @@ footer .developer-info {
     color: var(--dark-color);
     white-space: nowrap;
     margin-right: 5px;
+    font-size: 14px;
 }
 
 .custom-date-range input[type="date"] {
     padding: 8px 12px;
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 4px;
     font-size: 14px;
     font-family: inherit;
     transition: border-color 0.2s ease;
+    min-width: 140px;
 }
 
 .custom-date-range input[type="date"]:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.apply-btn {
+    padding: 8px 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-left: 5px;
+}
+
+.apply-btn:hover {
+    background-color: #2563eb;
+}
+
+.apply-btn:active {
+    background-color: #1d4ed8;
 }
 
 .date-range-selector label,
