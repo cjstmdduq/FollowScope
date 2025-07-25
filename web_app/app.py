@@ -693,7 +693,12 @@ def get_review_trends():
     
     try:
         analyzer = ReviewAnalyzer(REVIEW_DATA_PATH)
-        period_days = int(period)
+        
+        # period가 'custom'인 경우 기본값 사용, 아니면 int로 변환
+        if period == 'custom':
+            period_days = 30  # 기본값 (실제로는 start_date, end_date가 사용됨)
+        else:
+            period_days = int(period)
         
         # Get review trends analysis
         results = {
