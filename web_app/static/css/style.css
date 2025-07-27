@@ -895,8 +895,20 @@ footer .developer-info {
 
 .coupon-filters {
     display: flex;
-    gap: 10px;
+    flex-direction: column;
+    gap: 15px;
     margin-bottom: 20px;
+}
+
+.coupon-filters .filter-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.coupon-filters .status-filters {
+    display: flex;
+    gap: 10px;
 }
 
 .filter-btn {

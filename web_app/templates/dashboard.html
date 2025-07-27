@@ -314,10 +314,23 @@
             
             <!-- Coupon Status Filters -->
             <div class="coupon-filters">
-                <button class="filter-btn active" onclick="filterCoupons('all')">전체</button>
-                <button class="filter-btn" onclick="filterCoupons('active')">진행중</button>
-                <button class="filter-btn" onclick="filterCoupons('upcoming')">예정</button>
-                <button class="filter-btn" onclick="filterCoupons('expired')">종료</button>
+                <div class="filter-row">
+                    <div class="filter-item">
+                        <label for="couponProductTypeSelect">제품 타입:</label>
+                        <select id="couponProductTypeSelect" class="form-select" onchange="updateCouponDisplay()">
+                            <option value="all" selected>전체</option>
+                            <option value="roll">롤매트</option>
+                            <option value="puzzle">퍼즐매트</option>
+                            <option value="pet">애견롤매트</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="status-filters">
+                    <button class="filter-btn active" onclick="filterCoupons('all')">전체</button>
+                    <button class="filter-btn" onclick="filterCoupons('active')">진행중</button>
+                    <button class="filter-btn" onclick="filterCoupons('upcoming')">예정</button>
+                    <button class="filter-btn" onclick="filterCoupons('expired')">종료</button>
+                </div>
             </div>
             
             <!-- Coupon List by Competitor -->

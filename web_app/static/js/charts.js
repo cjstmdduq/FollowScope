@@ -1677,6 +1677,7 @@ document.getElementById('promotionFile')?.addEventListener('change', function(e)
 // Coupon Functions
 let couponData = [];
 let currentCouponFilter = 'all';
+let currentCouponProductType = 'all';
 
 async function loadCouponData() {
     try {
@@ -1711,6 +1712,24 @@ function renderCoupons() {
         // Filter based on current filter
         if (currentCouponFilter !== 'all' && status !== currentCouponFilter) {
             return;
+        }
+        
+        // Filter based on product type
+        if (currentCouponProductType !== 'all') {
+            // Determine product type from competitor or coupon name
+            let productType = 'roll'; // default
+            
+            if (coupon.competitor && (coupon.competitor.includes('펫') || coupon.competitor.includes('애견'))) {
+                productType = 'pet';
+            } else if (coupon.coupon_name && (coupon.coupon_name.includes('퍼즐') || coupon.coupon_name.includes('puzzle'))) {
+                productType = 'puzzle';
+            } else if (coupon.coupon_name && (coupon.coupon_name.includes('애견') || coupon.coupon_name.includes('강아지') || coupon.coupon_name.includes('펫'))) {
+                productType = 'pet';
+            }
+            
+            if (productType !== currentCouponProductType) {
+                return;
+            }
         }
         
         if (!couponsByCompetitor[coupon.competitor]) {
@@ -1840,6 +1859,14 @@ function filterCoupons(filter) {
     event.target.classList.add('active');
     
     renderCoupons();
+}
+
+function updateCouponDisplay() {
+    const productTypeSelect = document.getElementById('couponProductTypeSelect');
+    if (productTypeSelect) {
+        currentCouponProductType = productTypeSelect.value;
+        renderCoupons();
+    }
 }
 
 // Handle coupon file upload
