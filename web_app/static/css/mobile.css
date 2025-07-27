@@ -205,6 +205,28 @@
         width: 100%;
         margin-bottom: 1rem;
     }
+    
+    /* Coupon sections on mobile */
+    .coupon-content-wrapper {
+        gap: 20px;
+    }
+    
+    .coupon-section {
+        padding: 15px;
+    }
+    
+    .analysis-controls {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .control-group {
+        width: 100%;
+    }
+    
+    .control-group select {
+        width: 100%;
+    }
 
     .form-select {
         width: 100%;

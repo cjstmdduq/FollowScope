@@ -271,6 +271,16 @@
             <div class="section-header">
                 <h2>쿠폰 현황 & 실제 가격 분석</h2>
                 <p>쿠폰 적용 시 실제 가격과 경쟁력 변화를 확인하세요</p>
+                
+                <!-- Product Type Filter -->
+                <div class="filter-item">
+                    <label for="couponProductTypeSelect">제품 타입:</label>
+                    <select id="couponProductTypeSelect" class="form-select" onchange="updateCouponDisplay()">
+                        <option value="roll" selected>롤매트</option>
+                        <option value="puzzle">퍼즐매트</option>
+                        <option value="pet">애견롤매트</option>
+                    </select>
+                </div>
             </div>
             
             <!-- Upload Section -->
@@ -286,57 +296,66 @@
                 </form>
             </div>
             
-            <!-- Price Analysis Section -->
-            <div class="coupon-price-analysis">
-                <h3>가격 비교 시뮬레이션 - 110×400cm 3장 기준</h3>
-                <div class="analysis-controls">
-                    <div class="thickness-selector">
-                        <label>두께 선택:</label>
-                        <select id="thicknessSelect" onchange="simulatePurchase()">
-                            <option value="1.2">1.2cm</option>
-                            <option value="1.4">1.4cm</option>
-                            <option value="1.5">1.5cm</option>
-                            <option value="1.7" selected>1.7cm</option>
-                            <option value="2.1">2.1cm</option>
-                            <option value="2.3">2.3cm</option>
-                        </select>
+            <!-- Coupon Content Sections -->
+            <div class="coupon-content-wrapper">
+                <!-- Price Analysis Section -->
+                <div class="coupon-section">
+                    <h3>가격 비교 시뮬레이션</h3>
+                    <div class="coupon-price-analysis">
+                        <div class="analysis-controls">
+                            <div class="control-group">
+                                <label>구매 수량:</label>
+                                <select id="purchaseQuantity" onchange="simulatePurchase()">
+                                    <option value="1">110×400cm 1장</option>
+                                    <option value="2">110×400cm 2장</option>
+                                    <option value="3" selected>110×400cm 3장</option>
+                                    <option value="4">110×400cm 4장</option>
+                                    <option value="5">110×400cm 5장</option>
+                                </select>
+                            </div>
+                            <div class="control-group">
+                                <label>두께 선택:</label>
+                                <select id="thicknessSelect" onchange="simulatePurchase()">
+                                    <option value="1.2">1.2cm</option>
+                                    <option value="1.4">1.4cm</option>
+                                    <option value="1.5">1.5cm</option>
+                                    <option value="1.7" selected>1.7cm</option>
+                                    <option value="2.1">2.1cm</option>
+                                    <option value="2.3">2.3cm</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div id="priceComparisonChart" class="price-comparison-container">
+                            <!-- Price comparison will be rendered here -->
+                        </div>
+                        
+                        <div id="couponEffectivenessTable" class="effectiveness-table">
+                            <!-- Coupon effectiveness analysis will be shown here -->
+                        </div>
                     </div>
                 </div>
                 
-                <div id="priceComparisonChart" class="price-comparison-container">
-                    <!-- Price comparison will be rendered here -->
-                </div>
-                
-                <div id="couponEffectivenessTable" class="effectiveness-table">
-                    <!-- Coupon effectiveness analysis will be shown here -->
-                </div>
-            </div>
-            
-            <!-- Coupon Status Filters -->
-            <div class="coupon-filters">
-                <div class="filter-row">
-                    <div class="filter-item">
-                        <label for="couponProductTypeSelect">제품 타입:</label>
-                        <select id="couponProductTypeSelect" class="form-select" onchange="updateCouponDisplay()">
-                            <option value="all" selected>전체</option>
-                            <option value="roll">롤매트</option>
-                            <option value="puzzle">퍼즐매트</option>
-                            <option value="pet">애견롤매트</option>
-                        </select>
+                <!-- Coupon Status Section -->
+                <div class="coupon-section">
+                    <h3>쿠폰 현황</h3>
+                    
+                    <!-- Coupon Status Filters -->
+                    <div class="coupon-filters">
+                        <div class="status-filters">
+                            <button class="filter-btn active" onclick="filterCoupons('all')">전체</button>
+                            <button class="filter-btn" onclick="filterCoupons('active')">진행중</button>
+                            <button class="filter-btn" onclick="filterCoupons('upcoming')">예정</button>
+                            <button class="filter-btn" onclick="filterCoupons('expired')">종료</button>
+                        </div>
                     </div>
-                </div>
-                <div class="status-filters">
-                    <button class="filter-btn active" onclick="filterCoupons('all')">전체</button>
-                    <button class="filter-btn" onclick="filterCoupons('active')">진행중</button>
-                    <button class="filter-btn" onclick="filterCoupons('upcoming')">예정</button>
-                    <button class="filter-btn" onclick="filterCoupons('expired')">종료</button>
-                </div>
-            </div>
-            
-            <!-- Coupon List by Competitor -->
-            <div class="coupon-container">
-                <div id="couponList" class="coupon-grid">
-                    <!-- Coupon cards will be generated here -->
+                    
+                    <!-- Coupon List by Competitor -->
+                    <div class="coupon-container">
+                        <div id="couponList" class="coupon-grid">
+                            <!-- Coupon cards will be generated here -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

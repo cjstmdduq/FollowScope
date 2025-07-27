@@ -1677,7 +1677,7 @@ document.getElementById('promotionFile')?.addEventListener('change', function(e)
 // Coupon Functions
 let couponData = [];
 let currentCouponFilter = 'all';
-let currentCouponProductType = 'all';
+let currentCouponProductType = 'roll';
 
 async function loadCouponData() {
     try {
@@ -1892,20 +1892,18 @@ async function simulatePurchase() {
         return;
     }
     
-    const scenario = document.getElementById('purchaseScenario').value;
+    const quantity = parseInt(document.getElementById('purchaseQuantity')?.value || 3);
     const thickness = parseFloat(document.getElementById('thicknessSelect').value);
+    const productType = document.getElementById('couponProductTypeSelect')?.value || 'roll';
     
-    console.log(`Simulation params - Scenario: ${scenario}, Thickness: ${thickness}`);
+    console.log(`Simulation params - Quantity: ${quantity}, Thickness: ${thickness}, Product Type: ${productType}`);
     
-    // Define purchase requirements
-    const purchaseRequirements = {
-        '5m': { meters: 5, description: '방 1개 시공' },
-        '10m': { meters: 10, description: '거실 시공' },
-        '3m': { meters: 3, description: '작은방 시공' }
+    // Calculate required meters based on quantity (110×400cm = 4.4m² per piece)
+    const targetMeters = quantity * 4.4;
+    const requirement = { 
+        meters: targetMeters, 
+        description: `110×400cm ${quantity}장` 
     };
-    
-    const requirement = purchaseRequirements[scenario];
-    const targetMeters = requirement.meters;
     
     // Get products matching thickness (with more tolerance)
     const matchingProducts = allData.filter(p => Math.abs(p.Thickness_cm - thickness) <= 0.3);
