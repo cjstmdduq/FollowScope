@@ -1884,6 +1884,17 @@ function updateCouponDisplay() {
     if (productTypeSelect) {
         currentCouponProductType = productTypeSelect.value;
         renderCoupons();
+        
+        // Hide simulation if no data available for selected product type
+        const priceComparisonChart = document.getElementById('priceComparisonChart');
+        if (priceComparisonChart && (currentCouponProductType === 'pet' || currentCouponProductType === 'puzzle')) {
+            priceComparisonChart.innerHTML = '<div class="no-simulation-data"><p>해당 제품 타입의 시뮬레이션 데이터가 없습니다.</p></div>';
+        } else if (priceComparisonChart && currentCouponProductType === 'roll') {
+            // Re-run simulation for roll mat if data is available
+            if (typeof simulatePurchase === 'function') {
+                simulatePurchase();
+            }
+        }
     }
 }
 

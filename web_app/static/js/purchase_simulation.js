@@ -2,6 +2,18 @@
 async function simulatePurchase() {
     console.log('Starting realistic purchase simulation...');
     
+    // Check product type first
+    const productType = document.getElementById('couponProductTypeSelect')?.value || 'roll';
+    
+    // If not roll mat, show no data message
+    if (productType === 'pet' || productType === 'puzzle') {
+        const container = document.getElementById('priceComparisonChart');
+        if (container) {
+            container.innerHTML = '<div class="no-simulation-data"><p>해당 제품 타입의 시뮬레이션 데이터가 없습니다.</p></div>';
+        }
+        return;
+    }
+    
     // Debug data availability
     console.log('Data check:', {
         allData: allData ? allData.length : 'not loaded',
@@ -19,6 +31,9 @@ async function simulatePurchase() {
     }
     
     const thickness = parseFloat(document.getElementById('thicknessSelect').value);
+    const quantity = parseInt(document.getElementById('purchaseQuantity')?.value || 3);
+    
+    console.log(`Simulation params - Quantity: ${quantity}, Thickness: ${thickness}`);
     
     // Find 110cm width products that match the selected thickness
     const matchingProducts = allData.filter(p => 
@@ -36,8 +51,8 @@ async function simulatePurchase() {
     const competitors = [...new Set(matchingProducts.map(p => p.Competitor))];
     const simulations = [];
     
-    // Target: 400cm × 3장 = 1200cm total length needed
-    const targetTotalLength = 400 * 3; // 1200cm
+    // Target: 400cm × quantity장 = total length needed
+    const targetTotalLength = 400 * quantity;
     
     // For each competitor
     for (const competitor of competitors) {
@@ -209,7 +224,7 @@ async function simulatePurchase() {
     simulations.sort((a, b) => a.finalPrice - b.finalPrice);
     
     // Display results
-    displaySimpleSimulation(simulations, thickness);
+    displaySimpleSimulation(simulations, thickness, quantity);
 }
 
 function findBestProduct(products, targetWidth, targetLength) {
@@ -399,7 +414,7 @@ function calculateCouponDiscount(coupon, price) {
     return discount;
 }
 
-function displaySimpleSimulation(simulations, thickness) {
+function displaySimpleSimulation(simulations, thickness, quantity = 3) {
     const container = document.getElementById('priceComparisonChart');
     
     if (simulations.length === 0) {
@@ -407,10 +422,12 @@ function displaySimpleSimulation(simulations, thickness) {
         return;
     }
     
+    const totalLength = 400 * quantity;
+    
     let html = `
         <div class="simulation-header">
             <h4>가격 비교 시뮬레이션 (110cm 폭 기준)</h4>
-            <p>${thickness}cm 두께 - 400cm×3장 상당 (총 1200cm) 구매시</p>
+            <p>${thickness}cm 두께 - 400cm×${quantity}장 상당 (총 ${totalLength}cm) 구매시</p>
         </div>
         <div class="simulation-results">
     `;
@@ -433,7 +450,7 @@ function displaySimpleSimulation(simulations, thickness) {
                     </p>
                     <p class="purchase-details">
                         ${sim.unitsNeeded}장 구매 = ${(sim.unitsNeeded * sim.product.Length_cm)}cm 총 길이
-                        <span class="target-equivalent">(목표: 400cm×3장 = 1200cm)</span>
+                        <span class="target-equivalent">(목표: 400cm×${quantity}장 = ${totalLength}cm)</span>
                     </p>
                 </div>
                 
