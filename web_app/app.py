@@ -173,36 +173,47 @@ def save_live_data():
     pass
 
 def load_coupon_data():
-    """Load coupon data from all CSV files in the coupons directory"""
+    """Load coupon data from CSV files in subdirectories (roll, puzzle, pet)"""
     global coupon_data
     coupon_data = []
     
     try:
-        # Get all CSV files in the coupons directory
-        csv_files = [f for f in os.listdir(COUPON_DATA_PATH) if f.endswith('.csv')]
+        # Define product categories
+        categories = ['roll', 'puzzle', 'pet']
+        total_files = 0
         
-        if not csv_files:
-            print("No CSV files found in coupons directory")
-            return
-        
-        print(f"Found {len(csv_files)} CSV files: {csv_files}")
-        today = datetime.now().date()
-        
-        # Read each CSV file and merge data
-        for csv_file in csv_files:
-            csv_path = os.path.join(COUPON_DATA_PATH, csv_file)
-            try:
-                # Read CSV file
-                df = pd.read_csv(csv_path, encoding='utf-8-sig')
-                print(f"Processing {csv_file}: {len(df)} rows")
-                
-                # Process each row
-                for _, row in df.iterrows():
-                    # Get competitor name and apply mapping
-                    competitor = str(row.get('competitor', ''))
+        for category in categories:
+            category_path = os.path.join(COUPON_DATA_PATH, category)
+            if not os.path.exists(category_path):
+                print(f"Category directory not found: {category_path}")
+                continue
+            
+            # Get all CSV files in the category directory
+            csv_files = [f for f in os.listdir(category_path) if f.endswith('.csv')]
+            
+            if not csv_files:
+                print(f"No CSV files found in {category} directory")
+                continue
+            
+            print(f"Found {len(csv_files)} CSV files in {category}: {csv_files}")
+            today = datetime.now().date()
+            
+            # Read each CSV file and merge data
+            for csv_file in csv_files:
+                csv_path = os.path.join(category_path, csv_file)
+                try:
+                    # Read CSV file
+                    df = pd.read_csv(csv_path, encoding='utf-8-sig')
+                    print(f"Processing {category}/{csv_file}: {len(df)} rows")
+                    total_files += 1
                     
-                    # Use the same mapping as live data
-                    competitor_mapping = {
+                    # Process each row
+                    for _, row in df.iterrows():
+                        # Get competitor name and apply mapping
+                        competitor = str(row.get('competitor', ''))
+                        
+                        # Use the same mapping as live data
+                        competitor_mapping = {
                         '꿈비스토어': '꿈비',
                         'CREAMHAUS': '크림하우스',
                         '크림하우스': '크림하우스',
@@ -236,12 +247,12 @@ def load_coupon_data():
                         '위틀스토어': '위틀',
                         '킨초': '킨초',
                         '언니에반하다': '언니에반하다'
-                    }
-                    
-                    # Apply mapping
-                    competitor = competitor_mapping.get(competitor, competitor)
-                    
-                    coupon = {
+                        }
+                        
+                        # Apply mapping
+                        competitor = competitor_mapping.get(competitor, competitor)
+                        
+                        coupon = {
                         'competitor': competitor,
                         'type': str(row.get('type', '')) if pd.notna(row.get('type')) else '쿠폰',  # Add type field
                         'coupon_name': str(row.get('coupon_name', '')),
@@ -254,41 +265,44 @@ def load_coupon_data():
                         'end_date': str(row.get('end_date', '')) if pd.notna(row.get('end_date')) else '',
                         'description': str(row.get('description', '')) if pd.notna(row.get('description')) else '',
                         'source_file': csv_file  # Track which file this came from
-                    }
+                        }
+                        
+                        # Calculate status
+                        status = 'active'
+                        if coupon['start_date'] and coupon['end_date']:
+                            try:
+                                start_date = pd.to_datetime(coupon['start_date']).date()
+                                end_date = pd.to_datetime(coupon['end_date']).date()
+                                
+                                if today < start_date:
+                                    status = 'upcoming'
+                                elif today > end_date:
+                                    status = 'expired'
+                                else:
+                                    status = 'active'
+                            except:
+                                pass
+                        
+                        coupon['status'] = status
+                        
+                        # Skip invalid or unwanted entries
+                        if (coupon['coupon_name'].lower() in ['적용 안함', '적용안함', '', '-'] or
+                            not coupon['competitor'] or 
+                            not coupon['coupon_name'] or
+                            (not coupon['discount_rate'] and not coupon['discount_amount'])):
+                            continue
+                        
+                        # Add product category to coupon data
+                        coupon['product_category'] = category
+                        
+                        # Add valid coupon
+                        coupon_data.append(coupon)
                     
-                    # Calculate status
-                    status = 'active'
-                    if coupon['start_date'] and coupon['end_date']:
-                        try:
-                            start_date = pd.to_datetime(coupon['start_date']).date()
-                            end_date = pd.to_datetime(coupon['end_date']).date()
-                            
-                            if today < start_date:
-                                status = 'upcoming'
-                            elif today > end_date:
-                                status = 'expired'
-                            else:
-                                status = 'active'
-                        except:
-                            pass
-                    
-                    coupon['status'] = status
-                    
-                    # Skip invalid or unwanted entries
-                    if (coupon['coupon_name'].lower() in ['적용 안함', '적용안함', '', '-'] or
-                        not coupon['competitor'] or 
-                        not coupon['coupon_name'] or
-                        (not coupon['discount_rate'] and not coupon['discount_amount'])):
-                        continue
-                    
-                    # Add valid coupon
-                    coupon_data.append(coupon)
-                
-            except Exception as e:
-                print(f"Error reading {csv_file}: {e}")
-                continue
+                except Exception as e:
+                    print(f"Error reading {category}/{csv_file}: {e}")
+                    continue
         
-        print(f"Total loaded: {len(coupon_data)} coupons from {len(csv_files)} files")
+        print(f"Total loaded: {len(coupon_data)} coupons from {total_files} files across {len(categories)} categories")
         
     except Exception as e:
         print(f"Error loading coupon data: {e}")
@@ -619,13 +633,18 @@ def get_coupons():
 
 @app.route('/api/coupon-upload', methods=['POST'])
 def upload_coupon():
-    """Upload coupon data from Excel/CSV - saves with original filename"""
+    """Upload coupon data from Excel/CSV - saves in appropriate product category directory"""
     if 'file' not in request.files:
         return jsonify({'error': 'No file provided'}), 400
     
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'No file selected'}), 400
+    
+    # Get product category from form data (default to 'roll')
+    product_category = request.form.get('category', 'roll')
+    if product_category not in ['roll', 'puzzle', 'pet']:
+        product_category = 'roll'
     
     # Check file extension
     filename = secure_filename(file.filename)
@@ -634,8 +653,9 @@ def upload_coupon():
         return jsonify({'error': 'Invalid file type'}), 400
     
     try:
-        # Create coupons directory if it doesn't exist
-        os.makedirs(COUPON_DATA_PATH, exist_ok=True)
+        # Create category-specific directory if it doesn't exist
+        category_path = os.path.join(COUPON_DATA_PATH, product_category)
+        os.makedirs(category_path, exist_ok=True)
         
         # Generate unique filename with timestamp to avoid conflicts
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -644,7 +664,7 @@ def upload_coupon():
         if ext == '.csv':
             # Save CSV directly with timestamp
             final_filename = f"{base_name}_{timestamp}.csv"
-            filepath = os.path.join(COUPON_DATA_PATH, final_filename)
+            filepath = os.path.join(category_path, final_filename)
             file.save(filepath)
         else:
             # Convert Excel to CSV
@@ -653,7 +673,7 @@ def upload_coupon():
             
             df = pd.read_excel(temp_path)
             final_filename = f"{base_name}_{timestamp}.csv"
-            filepath = os.path.join(COUPON_DATA_PATH, final_filename)
+            filepath = os.path.join(category_path, final_filename)
             df.to_csv(filepath, index=False, encoding='utf-8-sig')
             
             os.remove(temp_path)

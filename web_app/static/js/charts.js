@@ -1716,15 +1716,33 @@ function renderCoupons() {
         
         // Filter based on product type
         if (currentCouponProductType !== 'all') {
-            // Determine product type from competitor or coupon name
+            // Determine product type from competitor name and coupon name
             let productType = 'roll'; // default
             
-            if (coupon.competitor && (coupon.competitor.includes('펫') || coupon.competitor.includes('애견'))) {
-                productType = 'pet';
-            } else if (coupon.coupon_name && (coupon.coupon_name.includes('퍼즐') || coupon.coupon_name.includes('puzzle'))) {
-                productType = 'puzzle';
-            } else if (coupon.coupon_name && (coupon.coupon_name.includes('애견') || coupon.coupon_name.includes('강아지') || coupon.coupon_name.includes('펫'))) {
-                productType = 'pet';
+            // Check competitor name for specific product types
+            if (coupon.competitor) {
+                const competitorLower = coupon.competitor.toLowerCase();
+                if (competitorLower.includes('펫') || 
+                    competitorLower.includes('리포소펫') || 
+                    competitorLower.includes('딩굴') ||
+                    competitorLower.includes('로하우스')) {
+                    productType = 'pet';
+                }
+            }
+            
+            // Check coupon name for specific product types
+            if (coupon.coupon_name) {
+                const couponLower = coupon.coupon_name.toLowerCase();
+                if (couponLower.includes('퍼즐') || couponLower.includes('puzzle')) {
+                    productType = 'puzzle';
+                } else if (couponLower.includes('애견') || couponLower.includes('강아지') || couponLower.includes('펫') || couponLower.includes('도그')) {
+                    productType = 'pet';
+                }
+            }
+            
+            // Override with product_category if specifically set and different from default
+            if (coupon.product_category && coupon.product_category !== 'roll') {
+                productType = coupon.product_category;
             }
             
             if (productType !== currentCouponProductType) {
