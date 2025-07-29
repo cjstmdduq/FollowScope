@@ -2350,9 +2350,11 @@ function toggleCustomDateRange() {
         }
     } else {
         customDateRange.style.display = 'none';
-        // 고정 기간 선택 시 바로 차트 업데이트
-        loadReviewTrends();
     }
+    
+    // 모든 경우에 차트 업데이트 (커스텀 선택 시에도 즉시 반영)
+    console.log('Period changed to:', period, '- updating charts');
+    loadReviewTrends();
 }
 
 function applyCustomDateRange() {
@@ -2614,8 +2616,18 @@ function updateMarketShareChart(summaryData) {
     // Determine which review count to use based on period
     if (period === '7') {
         reviewsField = 'recent_7d_reviews';
+    } else if (period === '14') {
+        reviewsField = 'recent_14d_reviews';
     } else if (period === '30') {
         reviewsField = 'recent_30d_reviews';
+    } else if (period === '90') {
+        reviewsField = 'recent_90d_reviews';
+    } else if (period === '180') {
+        reviewsField = 'recent_180d_reviews';
+    } else if (period === '365') {
+        reviewsField = 'recent_365d_reviews';
+    } else if (period === 'all') {
+        reviewsField = 'total_reviews';
     }
     
     // Calculate total reviews for the selected period
@@ -2653,7 +2665,12 @@ function updateMarketShareChart(summaryData) {
                 title: {
                     display: true,
                     text: period === '7' ? '시장점유율 (최근 7일 리뷰 기준)' : 
+                          period === '14' ? '시장점유율 (최근 14일 리뷰 기준)' :
                           period === '30' ? '시장점유율 (최근 30일 리뷰 기준)' :
+                          period === '90' ? '시장점유율 (최근 90일 리뷰 기준)' :
+                          period === '180' ? '시장점유율 (최근 6개월 리뷰 기준)' :
+                          period === '365' ? '시장점유율 (최근 1년 리뷰 기준)' :
+                          period === 'all' ? '시장점유율 (전체기간 리뷰 기준)' :
                           '시장점유율 (전체 리뷰 기준)'
                 },
                 legend: {

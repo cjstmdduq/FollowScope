@@ -171,7 +171,11 @@ class ReviewAnalyzer:
                 'total_reviews': len(df),
                 'avg_rating': df['평점'].mean() if '평점' in df.columns and not df['평점'].isna().all() else 0,
                 'recent_7d_reviews': len(df[df['작성일'] >= current_date - timedelta(days=7)]),
-                'recent_30d_reviews': len(df[df['작성일'] >= current_date - timedelta(days=30)])
+                'recent_14d_reviews': len(df[df['작성일'] >= current_date - timedelta(days=14)]),
+                'recent_30d_reviews': len(df[df['작성일'] >= current_date - timedelta(days=30)]),
+                'recent_90d_reviews': len(df[df['작성일'] >= current_date - timedelta(days=90)]),
+                'recent_180d_reviews': len(df[df['작성일'] >= current_date - timedelta(days=180)]),
+                'recent_365d_reviews': len(df[df['작성일'] >= current_date - timedelta(days=365)])
             }
         
         return growth_data
@@ -208,7 +212,11 @@ class ReviewAnalyzer:
                 'total_reviews': data['total_reviews'],
                 'avg_rating': round(avg_rating, 2),
                 'recent_7d_reviews': data['recent_7d_reviews'],
+                'recent_14d_reviews': data['recent_14d_reviews'],
                 'recent_30d_reviews': data['recent_30d_reviews'],
+                'recent_90d_reviews': data['recent_90d_reviews'],
+                'recent_180d_reviews': data['recent_180d_reviews'],
+                'recent_365d_reviews': data['recent_365d_reviews'],
                 'avg_daily_reviews': round(avg_daily, 2),
                 'recent_growth_rate': round(recent_growth, 2),
                 'weekly_growth_rate': round(weekly_growth, 2),
