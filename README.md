@@ -2,7 +2,7 @@
 경쟁사 제품 데이터 분석 및 시각화 플랫폼 
 
 ## 🎯 주요 기능
-### 1. 자료기반 경쟁사 분석**
+### 1. **데이터 기반 경쟁사 분석**
 - 7개 이상 경쟁사의 제품 데이터 자동 수집 및 분석
 - 가격, 부피, 면적 등 핵심 지표 계산
 - 실시간 대시보드로 시장 동향 파악
@@ -23,12 +23,17 @@
 - 최적 구매 옵션 추천
 - 쿠폰 적용 시뮬레이션
 
+### 5. **피드 시스템**
+- 실시간 경쟁사 동향 피드
+- 자동 피드 업데이트 (AWS 연동)
+- 프로모션 및 가격 변동 알림
+
 ## 🚀 빠른 시작
 
 ### 설치
 ```bash
 # 저장소 클론
-git clone https://github.com/yourusername/FollowScope.git
+git clone https://github.com/cjstmdduq/FollowScope.git
 cd FollowScope
 
 # 가상환경 생성 및 활성화
@@ -39,17 +44,20 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 실행 [이거]
+### 로컬 실행
 ```bash
-# 방법 1: 프로젝트 루트에서 모듈로 실행 (권장)
-cd /Users/cjstmdduq/Code/FollowScope && source venv/bin/activate && python -m web_app.app
+# 프로젝트 루트에서 모듈로 실행 (권장)
+cd FollowScope && source venv/bin/activate && python -m web_app.app
 
-# 방법 2: web_app 디렉토리에서 직접 실행 (상대 임포트를 절대 임포트로 변경 후)
-cd /Users/cjstmdduq/Code/FollowScope && source venv/bin/activate && cd web_app && python app.py
+# 또는 web_app 디렉토리에서 직접 실행
+cd FollowScope && source venv/bin/activate && cd web_app && python app.py
 ```
 
-### 종료 [로컬]
-kill -9 $(lsof -t -i:8080) <- 야 이거안됨>
+### 서비스 종료
+```bash
+# 포트 8080 사용 중인 프로세스 종료
+lsof -ti:8080 | xargs kill -9
+```
 
 브라우저에서 http://localhost:8080 접속
 
@@ -120,11 +128,12 @@ AWS Lightsail 서버 (운영 환경)
 ## 🛠 기술 스택
 
 - **Backend**: Python 3, Flask, Gunicorn
-- **Data Processing**: Pandas, OpenPyXL
+- **Data Processing**: Pandas, OpenPyXL, Requests
 - **Visualization**: Chart.js, Plotly
 - **Frontend**: HTML5, CSS3, JavaScript
 - **Deployment**: AWS Lightsail (Ubuntu 22.04)
 - **Version Control**: Git, GitHub
+- **Data Sync**: Git LFS, SCP
 
 ## 📁 프로젝트 구조
 
@@ -142,11 +151,27 @@ FollowScope/
 │   ├── products/         # 제품 데이터
 │   ├── reviews/          # 리뷰 데이터
 │   ├── coupons/          # 쿠폰 정보
+│   ├── feeds/            # 피드 데이터
 │   └── live/             # 라이브 일정
-└── scraping/macros/       # 데이터 수집 매크로
+├── scraping/macros/       # 데이터 수집 매크로
+└── update_feeds.py        # 자동 피드 업데이트
 ```
 
-## 🔄 데이터 동기화 (Git LFS)
+## 🔄 데이터 동기화
+
+### 피드 데이터 자동 업데이트
+
+최신 피드 데이터를 AWS에서 자동으로 받아오기:
+
+```bash
+# 자동 피드 업데이트
+python update_feeds.py
+
+# 또는 수동으로 AWS에서 다운로드
+scp -i ~/Downloads/LightsailDefaultKey-ap-northeast-2.pem ubuntu@3.35.55.31:/home/ubuntu/FollowScope/FollowScope/data/feeds/feeds.json ./FollowScope/data/feeds/feeds.json
+```
+
+## 💾 대용량 데이터 관리 (Git LFS)
 
 FollowScope는 Git LFS를 사용하여 로컬과 AWS 서버 간 데이터를 양방향으로 동기화합니다.
 
