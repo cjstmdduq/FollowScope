@@ -62,10 +62,11 @@ def update_last_update_time():
     print(f"[{last_update}] Last update time manually updated")
 
 def load_live_data():
-    """Load live calendar data from CSV file"""
+    """Load live calendar data using only the latest CSV in LIVE_DATA_PATH."""
+    import re
     global live_data
     live_data = []
-    
+
     # Load excluded brands from file
     excluded_brands = set()
     excluded_brands_file = os.path.join(os.path.dirname(__file__), 'excluded_brands.txt')
@@ -76,82 +77,99 @@ def load_live_data():
                 if line and not line.startswith('#'):
                     excluded_brands.add(line)
         print(f"Loaded {len(excluded_brands)} excluded brands")
-    
+
     try:
-        # Check for CSV files in the live directory
+        latest_csv_path = None
+        latest_key = None
+
+        # Pick only the latest NSLive_GCal_YYYYMMDD.csv; fallback to newest mtime
         if os.path.exists(LIVE_DATA_PATH):
-            for filename in os.listdir(LIVE_DATA_PATH):
-                if filename.endswith('.csv'):
-                    filepath = os.path.join(LIVE_DATA_PATH, filename)
-                    # Read CSV file with Google Calendar format
-                    df = pd.read_csv(filepath, encoding='utf-8-sig')
-                    
-                    for _, row in df.iterrows():
-                        # Extract competitor name from Subject field
-                        competitor = str(row.get('Subject', ''))
-                        
-                        # Map competitor names to standard names used in the system
-                        competitor_mapping = {
-                            '꿈비스토어': '꿈비',
-                            'CREAMHAUS': '크림하우스',
-                            '크림하우스': '크림하우스',
-                            '젤리맘': '젤리맘',
-                            '파크론몰': '파크론',
-                            '티지오매트': '티지오매트',
-                            '바르맘': '바르맘',
-                            '리포소 홈': '리포소홈',
-                            '따사룸': '따사룸',
-                            '플로리아 FLORIA': '플로리아',
-                            '국민매트 알집매트': '알집매트',
-                            '아소방': '아소방',
-                            '소베맘': '소베맘',
-                            '카라즈': '카라즈',
-                            '아가드': '아가드',
-                            '불로홈': '불로홈',
-                            '아가앤': '아가앤',
-                            '베베핏 Bebefit': '베베핏',
-                            '베베데코': '베베데코',
-                            '히요코베이비': '히요코베이비',
-                            '말랑하니': '말랑하니',
-                            '무무슈': '무무슈',
-                            '라비킷': '라비킷',
-                            '곰표한일전자공식몰': '곰표한일',
-                            '루트비 공식몰': '루트비',
-                            '두리 공식스토어': '두리',
-                            '스위트패밀리': '스위트패밀리',
-                            '핑크퐁 공식스토어': '핑크퐁',
-                            '위드앤스토어': '위드앤',
-                            '네이쳐러브메레': '네이쳐러브메레',
-                            '위틀스토어': '위틀',
-                            '킨초': '킨초',
-                            '언니에반하다': '언니에반하다'
-                        }
-                        
-                        # Use mapped name or original if not in mapping
-                        competitor = competitor_mapping.get(competitor, competitor)
-                        
-                        # Skip excluded brands
-                        if competitor in excluded_brands or row.get('Subject', '') in excluded_brands:
-                            continue
-                        
-                        live_event = {
-                            'date': str(row.get('Start Date', '')),
-                            'competitor': competitor,
-                            'title': str(row.get('Description', '')),
-                            'time': str(row.get('Start Time', '')) if pd.notna(row.get('Start Time')) else '',
-                            'description': f"[{competitor}] {row.get('Description', '')}"
-                        }
-                        
-                        # Validate required fields
-                        if live_event['date'] and live_event['competitor'] and live_event['title']:
-                            # Parse date to ensure correct format
-                            try:
-                                date_obj = pd.to_datetime(live_event['date'])
-                                live_event['date'] = date_obj.strftime('%Y-%m-%d')
-                                live_data.append(live_event)
-                            except:
-                                pass
-        
+            csv_files = [f for f in os.listdir(LIVE_DATA_PATH) if f.endswith('.csv')]
+            for filename in csv_files:
+                filepath = os.path.join(LIVE_DATA_PATH, filename)
+                m = re.match(r"^NSLive_GCal_(\d{8})\.csv$", filename)
+                key = None
+                if m:
+                    key = (1, m.group(1))  # Prefer pattern matches; compare by date string
+                else:
+                    try:
+                        key = (0, int(os.path.getmtime(filepath)))  # Fallback by mtime
+                    except Exception:
+                        key = (0, 0)
+
+                if latest_key is None or key > latest_key:
+                    latest_key = key
+                    latest_csv_path = filepath
+
+        if latest_csv_path and os.path.exists(latest_csv_path):
+            print(f"Loading live data from: {os.path.basename(latest_csv_path)}")
+            df = pd.read_csv(latest_csv_path, encoding='utf-8-sig')
+
+            for _, row in df.iterrows():
+                # Extract competitor name from Subject field
+                competitor = str(row.get('Subject', ''))
+
+                # Map competitor names to standard names used in the system
+                competitor_mapping = {
+                    '꿈비스토어': '꿈비',
+                    'CREAMHAUS': '크림하우스',
+                    '크림하우스': '크림하우스',
+                    '젤리맘': '젤리맘',
+                    '파크론몰': '파크론',
+                    '티지오매트': '티지오매트',
+                    '바르맘': '바르맘',
+                    '리포소 홈': '리포소홈',
+                    '따사룸': '따사룸',
+                    '플로리아 FLORIA': '플로리아',
+                    '국민매트 알집매트': '알집매트',
+                    '아소방': '아소방',
+                    '소베맘': '소베맘',
+                    '카라즈': '카라즈',
+                    '아가드': '아가드',
+                    '불로홈': '불로홈',
+                    '아가앤': '아가앤',
+                    '베베핏 Bebefit': '베베핏',
+                    '베베데코': '베베데코',
+                    '히요코베이비': '히요코베이비',
+                    '말랑하니': '말랑하니',
+                    '무무슈': '무무슈',
+                    '라비킷': '라비킷',
+                    '곰표한일전자공식몰': '곰표한일',
+                    '루트비 공식몰': '루트비',
+                    '두리 공식스토어': '두리',
+                    '스위트패밀리': '스위트패밀리',
+                    '핑크퐁 공식스토어': '핑크퐁',
+                    '위드앤스토어': '위드앤',
+                    '네이쳐러브메레': '네이쳐러브메레',
+                    '위틀스토어': '위틀',
+                    '킨초': '킨초',
+                    '언니에반하다': '언니에반하다'
+                }
+
+                # Use mapped name or original if not in mapping
+                competitor = competitor_mapping.get(competitor, competitor)
+
+                # Skip excluded brands
+                if competitor in excluded_brands or row.get('Subject', '') in excluded_brands:
+                    continue
+
+                live_event = {
+                    'date': str(row.get('Start Date', '')),
+                    'competitor': competitor,
+                    'title': str(row.get('Description', '')),
+                    'time': str(row.get('Start Time', '')) if pd.notna(row.get('Start Time')) else '',
+                    'description': f"[{competitor}] {row.get('Description', '')}"
+                }
+
+                # Validate required fields
+                if live_event['date'] and live_event['competitor'] and live_event['title']:
+                    try:
+                        date_obj = pd.to_datetime(live_event['date'])
+                        live_event['date'] = date_obj.strftime('%Y-%m-%d')
+                        live_data.append(live_event)
+                    except Exception:
+                        pass
+
         # Remove duplicates based on date, time, and competitor
         seen = set()
         unique_live_events = []
@@ -160,10 +178,10 @@ def load_live_data():
             if key not in seen:
                 seen.add(key)
                 unique_live_events.append(live_event)
-        
+
         live_data = unique_live_events
-        
-        print(f"Loaded {len(live_data)} live events from CSV files")
+
+        print(f"Loaded {len(live_data)} live events")
     except Exception as e:
         print(f"Error loading live data: {e}")
         live_data = []
