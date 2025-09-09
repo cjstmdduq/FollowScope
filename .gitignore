@@ -35,7 +35,8 @@ Thumbs.db
 FollowScope/data/processed/*.csv
 
 # Dynamic data files
-FollowScope/data/feeds/feeds.json
+# feeds.json은 이제 Git으로 관리하여 버전 통일
+# (동기화 요구에 따라 무시 규칙 해제)
 FollowScope/data/live/*.json
 FollowScope/data/coupons/*.json
 FollowScope/data/reviews/*.json
