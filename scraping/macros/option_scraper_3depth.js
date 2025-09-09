@@ -1,7 +1,7 @@
 // 네이버 브랜드 스토어 가격 스크래퍼 - 3단계 드롭다운 (간소화 & 저부하 모드)
 // 2025.09.08 ver
 // 사용법: 상품 상세 페이지에서 F12 → Console → 이 코드 전체 붙여넣기 → Enter
-// VPN사용 권장
+// VPN사용 권장 , CSV 버젼으로 업데이트
 (function () {
   'use strict';
 
@@ -85,22 +85,24 @@
     return results;
   }
 
-  function toTSV(basePrice, results) {
-    const baseNum = parseInt(basePrice.replace(/[,원]/g, '')) || 0;
-    let tsv = '기본가격\t옵션1\t옵션2\t옵션3\t추가가격\t최종가격\n';
-    tsv += `${baseNum}\t\t\t\t\t${baseNum}\n\n`;
-    results.forEach(r => {
-      const addMatch = r.옵션3.match(/\(([+-][\d,]+)원\)/);
-      const add = addMatch ? parseInt(addMatch[1].replace(/[,원]/g, '')) : 0;
-      const opt3 = r.옵션3.replace(/\s*\([+-][\d,]+원\)/, '');
-      tsv += `\t${r.옵션1}\t${r.옵션2}\t${opt3}\t${add}\t${baseNum + add}\n`;
+  function toCSV(basePrice, results) {
+    const basePriceNum = parseInt(basePrice.replace(/[,원]/g, '')) || 0;
+    let csv = `기본가격,옵션1,옵션2,옵션3,추가가격,최종가격\n`;
+    csv += `${basePriceNum},,,,${basePriceNum}\n\n`;
+    results.forEach(row => {
+      const match = row.옵션3.match(/\(([+-][\d,]+)원\)/);
+      let add = 0;
+      if (match) add = parseInt(match[1].replace(/[,원]/g, '')) || 0;
+      const opt3Clean = row.옵션3.replace(/\s*\([+-][\d,]+원\)/, '');
+      const final = basePriceNum + add;
+      csv += `,${row.옵션1},${row.옵션2},${opt3Clean},${add || ''},${final}\n`;
     });
-    return tsv;
+    return csv;
   }
 
-  function downloadTSV(content, filename) {
+  function downloadCSV(content, filename) {
     const BOM = '\uFEFF';
-    const blob = new Blob([BOM + content], { type: 'text/tab-separated-values;charset=utf-8' });
+    const blob = new Blob([BOM + content], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -114,11 +116,11 @@
     console.log('기본가:', base);
     const combos = await scrapeOptionCombinations();
     console.log('총 조합:', combos.length);
-    if (combos.length) {
-      const tsv = toTSV(base, combos);
-      const name = document.title.split(' : ')[0] || '상품';
+    if (combos.length > 0) {
+      const csv = toCSV(base, combos);
+      const productName = (document.title.split(' : ')[0] || '상품').replace(/[\\/:*?"<>|]/g, ' ');
       const ts = new Date().toISOString().slice(0,16).replace(/[T:]/g,'-');
-      downloadTSV(tsv, `${name}_옵션가격_3단계_${ts}.tsv`);
+      downloadCSV(csv, `${productName}_옵션가격_3단계_${ts}.csv`);
     }
     window.scrapingResults = { basePrice: base, combinations: combos };
   }
