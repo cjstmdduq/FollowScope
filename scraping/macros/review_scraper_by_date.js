@@ -1,5 +1,12 @@
+// 리뷰 수집 스크립트
+// 최신순 정렬 적용
+// 실행 위치: 개발자도구 콘솔
+// ver.20250909
+
+
+
 // ====== 설정 ======
-const DAYS_TO_COLLECT = 90; // 수집할 기간 (일 단위)
+const DAYS_TO_COLLECT = 360; // 수집할 기간 (일 단위)
 const DELAY_MS = 2000;      // 페이지 이동 후 기다릴 시간 (2초)
 // ==================
 
@@ -25,14 +32,14 @@ function downloadCSV(data, filename) {
 
 function parseReviewsOnPage() {
   const reviews = [];
-  document.querySelectorAll('li.BnwL_cs1av, li._23RmlgB4s-').forEach(item => {
+  document.querySelectorAll('li.PxsZltB5tV').forEach(item => {
     try {
-      const rawDate = item.querySelector('div.iWGqB6S4Lq > span._2L3vDiadT9, span._3QDEeS6t1G')?.innerText.trim() || 'N/A';
+      const rawDate = item.querySelector('span.MX91DFZo2F:not(strong.MX91DFZo2F)')?.innerText.trim() || 'N/A';
       let formattedDate = 'N/A';
       if (rawDate !== 'N/A') formattedDate = '20' + rawDate.slice(0, -1).replace(/\./g, '-');
-      const rating = item.querySelector('em._15NU42F3kT, em._1Y3_FXb2eC')?.innerText.trim() || 'N/A';
-      const userId = item.querySelector('strong._2L3vDiadT9, strong._32iS4d2g_Y')?.innerText.trim() || 'N/A';
-      const optionDiv = item.querySelector('div._2FXNMst_ak, div.ZZi38dC6Yc');
+      const rating = item.querySelector('em.n6zq2yy0KA')?.innerText.trim() || 'N/A';
+      const userId = item.querySelector('strong.MX91DFZo2F')?.innerText.trim() || 'N/A';
+      const optionDiv = item.querySelector('div.b_caIle8kC');
       let option = '옵션 정보 없음';
       if (optionDiv) {
         let optionText = '';
@@ -44,8 +51,8 @@ function parseReviewsOnPage() {
         }
         option = optionText || '옵션 정보 없음';
       }
-      const content = item.querySelector('div._1kMfD5ErZ6 > span._2L3vDiadT9, div.YEtPmcIjQ6 > span')?.innerText.trim() || '리뷰 내용 없음';
-      const imageUrl = item.querySelector('div._3Bbv1ae9fg img, div._2284n_d2w- img')?.src || '이미지 없음';
+      const content = item.querySelector('div.KqJ8Qqw082 span.MX91DFZo2F')?.innerText.trim() || '리뷰 내용 없음';
+      const imageUrl = item.querySelector('div.s30AvhHfb0 img')?.src || '이미지 없음';
       reviews.push({ '평점': rating, '작성자': userId, '작성일': formattedDate, '구매옵션': option, '리뷰내용': content, '이미지URL': imageUrl });
     } catch (e) { console.warn('리뷰 하나를 처리하는 중 오류:', e); }
   });
@@ -77,7 +84,7 @@ function parseReviewsOnPage() {
 
     if (!stopScraping) {
       let moved = false;
-      const paginationSelector = 'div._1HJarNZHiI, div.UkePGs_i3-';
+      const paginationSelector = 'div.LiT9lKOVbw';
       const pagination = document.querySelector(paginationSelector);
 
       if (pagination) {

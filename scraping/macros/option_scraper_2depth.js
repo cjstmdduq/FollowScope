@@ -1,291 +1,125 @@
-// 네이버 브랜드 스토어 가격 스크래퍼 - 2단계 드롭다운 전용 버전
-// 사용법: 해당 상품 페이지에서 F12 -> Console 탭 -> 이 코드 붙여넣기 후 실행
+// 네이버 브랜드 스토어 가격 스크래퍼 - 2단계 드롭다운 (간소화 & 저부하 모드)
+// 2025.09.08 ver
+// 사용: 상품 상세 페이지에서 F12 → Console → 이 코드 전체 붙여넣기 → Enter 
+// VPN사용 권장
+(function () {
+  'use strict';
 
-(function() {
-    'use strict';
+  const wait = (ms) => new Promise(res => setTimeout(res, ms));
 
-    // 설정값
-    const SELECTORS = {
-        basePrice: 'strong.aICRqgP9zw > span._1LY7DqCnwR',  // strong 태그 내의 상품 가격
-        optionsBase: '#content > div > div._2-I30XS1lA > div._2QCa6wHHPy > fieldset > div.bd_2dy3Y',
-        // 드롭다운 버튼 (클래스명 기반)
-        dropdown1: 'div.bd_2dy3Y > div:nth-child(1) > a.bd_1fhc9',
-        dropdown2: 'div.bd_2dy3Y > div:nth-child(2) > a.bd_1fhc9',
-        // 열린 드롭다운의 옵션들 (더 구체적인 선택자)
-        options1: 'div.bd_2dy3Y > div:nth-child(1) > ul[role="listbox"] > li[role="presentation"] > a[role="option"]',
-        options2: 'div.bd_2dy3Y > div:nth-child(2) > ul[role="listbox"] > li[role="presentation"] > a[role="option"]'
-    };
+  // === 기본 가격 추출 (최신 구조 대응) ===
+  async function getBasePrice() {
+    await wait(1000);
+    const el = document.querySelector('strong.Xu9MEKUuIo > span.e1DMQNBPJ_');
+    if (el) {
+      const txt = el.textContent.trim();
+      console.log('기본 가격:', txt);
+      return txt;
+    }
+    console.warn('⚠️ 기본 가격을 찾지 못했습니다.');
+    return 'N/A';
+  }
 
-    // 유틸리티 함수
-    function wait(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+  // === 드롭다운 열기 ===
+  async function openDropdown(selector) {
+    const dropdown = document.querySelector(selector);
+    if (!dropdown) return false;
+
+    const isExpanded = dropdown.getAttribute('aria-expanded') === 'true';
+    if (isExpanded) {
+      dropdown.click(); // 닫기
+      await wait(600);  // (기존 200 → 600ms)
+    }
+    dropdown.click();   // 열기
+    await wait(1500);   // (기존 500 → 1500ms, 최소 1초 이상)
+    return true;
+  }
+
+  // === 옵션 조합 스크래핑 ===
+  async function scrapeOptionCombinations() {
+    const results = [];
+
+    const d1 = 'div.bd_2dy3Y > div:nth-child(1) > a.bd_1fhc9';
+    const d2 = 'div.bd_2dy3Y > div:nth-child(2) > a.bd_1fhc9';
+
+    const o1s = 'div.bd_2dy3Y > div:nth-child(1) ul[role="listbox"] a[role="option"]';
+    const o2s = 'div.bd_2dy3Y > div:nth-child(2) ul[role="listbox"] a[role="option"]';
+
+    if (!await openDropdown(d1)) return results;
+    await wait(1500);
+
+    const firstOptions = document.querySelectorAll(o1s);
+    for (let i = 0; i < firstOptions.length; i++) {
+      await openDropdown(d1);
+      await wait(1000); // (기존 300 → 1000ms)
+      const opt1s = document.querySelectorAll(o1s);
+      const opt1Text = opt1s[i].textContent.trim();
+      opt1s[i].click();
+      await wait(2400); // (기존 800 → 2400ms)
+
+      if (!await openDropdown(d2)) continue;
+      await wait(900); // (기존 300 → 900ms)
+      const secondOptions = document.querySelectorAll(o2s);
+
+      for (let j = 0; j < secondOptions.length; j++) {
+        const opt2Text = secondOptions[j].textContent.trim();
+        results.push({ 옵션1: opt1Text, 옵션2: opt2Text });
+        console.log(`✅ ${opt1Text} | ${opt2Text}`);
+        await wait(1000); // 조합 간 쿨다운
+      }
     }
 
-    function getElement(selector) {
-        return document.querySelector(selector);
+    console.log(`\n=== 스크래핑 완료: 총 ${results.length}개 ===`);
+    return results;
+  }
+
+  // === CSV 변환 ===
+  function toCSV(basePrice, results) {
+    const basePriceNum = parseInt(basePrice.replace(/[,원]/g, '')) || 0;
+    let csv = `기본가격,옵션1,옵션2,추가가격,최종가격\n`;
+    csv += `${basePriceNum},,,,${basePriceNum}\n\n`;
+
+    results.forEach(row => {
+      const match = row.옵션2.match(/\(([+-][\d,]+)원\)/);
+      let add = 0;
+      if (match) add = parseInt(match[1].replace(/[,원]/g, '')) || 0;
+      const opt2Clean = row.옵션2.replace(/\s*\([+-][\d,]+원\)/, '');
+      const final = basePriceNum + add;
+      csv += `,${row.옵션1},${opt2Clean},${add || ''},${final}\n`;
+    });
+    return csv;
+  }
+
+  function downloadCSV(content, filename) {
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + content], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // === 메인 ===
+  async function main() {
+    console.clear();
+    console.log('=== 네이버 브랜드 스토어 가격 스크래퍼 (2단계·간소화) ===');
+
+    const base = await getBasePrice();
+    const combos = await scrapeOptionCombinations();
+
+    console.log('\n총 조합:', combos.length);
+    if (combos.length > 0) {
+      const csv = toCSV(base, combos);
+      const productName = (document.title.split(' : ')[0] || '상품').replace(/[\\/:*?"<>|]/g, ' ');
+      const ts = new Date().toISOString().slice(0,16).replace(/[T:]/g,'-');
+      downloadCSV(csv, `${productName}_옵션가격_2단계_${ts}.csv`);
     }
 
-    function getElements(selector) {
-        return document.querySelectorAll(selector);
-    }
+    window.scrapingResults = { basePrice: base, combinations: combos };
+    console.log('=== 완료 ===');
+  }
 
-    function clickElement(element) {
-        if (element) {
-            element.click();
-            return true;
-        }
-        return false;
-    }
-
-    // 가격 추출 함수
-    function extractPrice(optionText) {
-        const priceMatch = optionText.match(/\(([+-][\d,]+원)\)/);
-        if (priceMatch) {
-            return parseInt(priceMatch[1].replace(/[,원]/g, '')) || 0;
-        }
-        return 0;
-    }
-
-    async function getBasePrice() {
-        console.log('기본 가격 조회 중...');
-        await wait(1000);
-        
-        // 여러 가능한 선택자 시도 (strong 태그 내의 가격만)
-        const possibleSelectors = [
-            'strong.aICRqgP9zw > span._1LY7DqCnwR',  // 정확한 클래스명
-            'strong > span._1LY7DqCnwR',  // strong 안의 가격
-            'div._3k440DUKzy strong > span._1LY7DqCnwR'  // 컨테이너 내 strong
-        ];
-        
-        let priceElement = null;
-        for (const selector of possibleSelectors) {
-            priceElement = getElement(selector);
-            if (priceElement) {
-                console.log(`가격 요소 발견: ${selector}`);
-                break;
-            }
-        }
-        
-        if (priceElement) {
-            const price = priceElement.textContent.trim();
-            console.log(`기본 가격: ${price}`);
-            return price;
-        } else {
-            console.log('기본 가격을 찾을 수 없습니다.');
-            // 디버깅: 모든 span._1LY7DqCnwR 요소 확인
-            const allPriceSpans = document.querySelectorAll('span._1LY7DqCnwR');
-            console.log(`span._1LY7DqCnwR 요소 개수: ${allPriceSpans.length}`);
-            allPriceSpans.forEach((span, idx) => {
-                console.log(`  [${idx}] ${span.textContent.trim()}`);
-            });
-            return 'N/A';
-        }
-    }
-
-    async function openDropdown(dropdownSelector) {
-        const dropdown = getElement(dropdownSelector);
-        if (dropdown) {
-            // aria-expanded 속성 확인
-            const isExpanded = dropdown.getAttribute('aria-expanded') === 'true';
-            console.log(`  드롭다운 상태: ${isExpanded ? '열림' : '닫힘'}`);
-            
-            // 이미 열려있으면 닫고 다시 열기
-            if (isExpanded) {
-                dropdown.click(); // 닫기
-                await wait(200);
-            }
-            
-            dropdown.click(); // 열기
-            await wait(500);
-            return true;
-        }
-        return false;
-    }
-
-    async function scrapeOptionCombinations() {
-        const results = [];
-        
-        console.log('=== 2단계 드롭다운 스크래핑 시작 ===');
-        console.log('로직: 첫 번째 → 두 번째 (가격 포함) 순차 선택\n');
-        
-        // 첫 번째 드롭다운 열어서 옵션 개수 확인
-        console.log('첫 번째 드롭다운 열기...');
-        if (!await openDropdown(SELECTORS.dropdown1)) {
-            console.log('첫 번째 드롭다운을 열 수 없습니다.');
-            return results;
-        }
-        await wait(500);
-        
-        const firstDropdownOptions = getElements(SELECTORS.options1);
-        if (firstDropdownOptions.length === 0) {
-            console.log('첫 번째 옵션을 찾을 수 없습니다.');
-            return results;
-        }
-        
-        console.log(`첫 번째 드롭다운 옵션 개수: ${firstDropdownOptions.length}\n`);
-        
-        // 진행률 표시 함수
-        const showProgress = (current, total, prefix = '') => {
-            const percent = Math.round((current / total) * 100);
-            console.log(`${prefix} [${current}/${total}] (${percent}%)`);
-        };
-        
-        // 각 첫 번째 옵션별로 처리
-        for (let i = 0; i < firstDropdownOptions.length; i++) {
-            showProgress(i + 1, firstDropdownOptions.length, '\n📌 첫 번째 옵션');
-            
-            // 1. 첫 번째 드롭다운 열고 i번째 옵션 선택
-            await openDropdown(SELECTORS.dropdown1);
-            await wait(300);
-            
-            let option1Elements = getElements(SELECTORS.options1);
-            if (i >= option1Elements.length) continue;
-            
-            const option1Text = option1Elements[i].textContent.trim();
-            console.log(`\n1️⃣ 첫 번째 옵션 선택: "${option1Text}"`);
-            option1Elements[i].click();
-            await wait(800);
-            
-            // 2. 두 번째 드롭다운 열어서 옵션 개수 확인
-            console.log('   두 번째 드롭다운 열기...');
-            if (!await openDropdown(SELECTORS.dropdown2)) {
-                console.log(`   ❌ "${option1Text}" → 두 번째 드롭다운 열기 실패`);
-                continue;
-            }
-            await wait(300);
-            
-            const secondDropdownOptions = getElements(SELECTORS.options2);
-            if (secondDropdownOptions.length === 0) {
-                console.log(`   ❌ "${option1Text}" → 두 번째 옵션 없음`);
-                continue;
-            }
-            
-            console.log(`   두 번째 드롭다운 옵션 개수: ${secondDropdownOptions.length}`);
-            
-            // 각 두 번째 옵션별로 처리 (마지막 단계)
-            for (let j = 0; j < secondDropdownOptions.length; j++) {
-                const option2Text = secondDropdownOptions[j].textContent.trim();
-                
-                const combination = {
-                    옵션1: option1Text,
-                    옵션2: option2Text
-                };
-                
-                results.push(combination);
-                console.log(`   ✅ [${results.length}] ${option1Text} | ${option2Text}`);
-            }
-        }
-        
-        console.log(`\n${'='.repeat(60)}`);
-        console.log(`스크래핑 완료: 총 ${results.length}개 조합 수집`);
-        console.log(`${'='.repeat(60)}`);
-        
-        return results;
-    }
-
-    // CSV 변환 함수 (Excel용) - 2단계 전용
-    function toCSV(basePrice, results) {
-        // 기본 가격을 숫자로 변환 (콤마 제거)
-        const basePriceNum = parseInt(basePrice.replace(/[,원]/g, '')) || 0;
-        
-        // 헤더
-        let csv = `기본가격,옵션1,옵션2,추가가격,최종가격\n`;
-        csv += `${basePriceNum},,,,${basePriceNum}\n`;
-        csv += `\n`;
-        
-        // 데이터
-        results.forEach(row => {
-            // 두 번째 옵션에서 추가 가격 추출
-            const additionalNum = extractPrice(row.옵션2);
-            const additionalPrice = additionalNum || '';
-            
-            // 최종 가격 계산
-            const finalPriceNum = basePriceNum + additionalNum;
-            
-            // 옵션2에서 가격 부분 제거
-            const option2Clean = row.옵션2.replace(/\s*\([+-][\d,]+원\)/, '');
-            
-            // CSV 특수문자 처리 (쉼마, 따옴표 등)
-            const escapeCSV = (str) => {
-                if (str.toString().includes(',') || str.toString().includes('"') || str.toString().includes('\n')) {
-                    return `"${str.toString().replace(/"/g, '""')}"`;
-                }
-                return str;
-            };
-            
-            csv += `${escapeCSV('')},${escapeCSV(row.옵션1)},${escapeCSV(option2Clean)},${additionalPrice},${finalPriceNum}\n`;
-        });
-        
-        return csv;
-    }
-
-    // 다운로드 함수
-    function downloadCSV(content, filename) {
-        const BOM = '\uFEFF'; // Excel에서 한글 깨짐 방지
-        const blob = new Blob([BOM + content], { type: 'text/csv;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.click();
-        
-        URL.revokeObjectURL(url);
-    }
-
-    async function main() {
-        console.log('=== 네이버 브랜드 스토어 가격 스크래퍼 (2단계 전용) ===');
-        
-        try {
-            // 기본 가격 조회
-            const basePrice = await getBasePrice();
-            
-            // 옵션 조합 스크래핑
-            console.log('옵션 조합 스크래핑 시작...');
-            const combinations = await scrapeOptionCombinations();
-            
-            // 결과 출력
-            console.log('\n=== 스크래핑 결과 ===');
-            console.log(`기본 가격: ${basePrice}`);
-            console.log(`총 조합 개수: ${combinations.length}`);
-            console.log('--- 옵션 조합 목록 ---');
-            
-            combinations.forEach((combo, index) => {
-                console.log(`${index + 1}. ${combo.옵션1} | ${combo.옵션2}`);
-            });
-            
-            // CSV 변환 및 다운로드
-            if (combinations.length > 0) {
-                const csv = toCSV(basePrice, combinations);
-                
-                // 파일명 생성
-                const productName = document.title.split(' : ')[0] || '상품';
-                const timestamp = new Date().toISOString().slice(0, 16).replace(/[T:]/g, '-');
-                const filename = `${productName}_옵션가격_2단계_${timestamp}.csv`;
-                
-                // 다운로드
-                downloadCSV(csv, filename);
-                
-                console.log(`\n📥 CSV 파일 다운로드: ${filename}`);
-                console.log('💡 Excel에서 열면 자동으로 표로 정리됩니다.');
-                console.log('📊 모든 가격은 "원" 없이 숫자만 표시됩니다.');
-            }
-            
-            // 결과를 전역 변수에 저장
-            window.scrapingResults = {
-                basePrice: basePrice,
-                combinations: combinations,
-                totalCount: combinations.length
-            };
-            
-            console.log('\n결과가 window.scrapingResults 에 저장되었습니다.');
-            console.log('=== 스크래핑 완료 ===');
-            
-        } catch (error) {
-            console.error('오류 발생:', error);
-        }
-    }
-
-    // 실행
-    main();
+  main();
 })();
