@@ -1,5 +1,2 @@
-# Git LFS tracking for CSV files
-FollowScope/data/products/**/*.csv filter=lfs diff=lfs merge=lfs -text
-FollowScope/data/raw/*.csv filter=lfs diff=lfs merge=lfs -text
-FollowScope/data/**/*.json filter=lfs diff=lfs merge=lfs -text
-FollowScope/data/**/*.csv filter=lfs diff=lfs merge=lfs -text
+# Git LFS disabled for data files (Option C)
+# Historical LFS objects remain; new commits will not use LFS for data.

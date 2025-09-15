@@ -7,14 +7,8 @@ echo "🔄 FollowScope 데이터 동기화 시작..."
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
-# 1. 로컬 변경사항 확인
-if [[ -n $(git status -s) ]]; then
-    echo "📝 로컬 변경사항 발견"
-    git add FollowScope/data/products/**/*.csv
-    git add FollowScope/data/raw/*.csv
-    git commit -m "데이터 업데이트: $(date '+%Y-%m-%d %H:%M:%S')"
-    echo "✅ 로컬 변경사항 커밋 완료"
-fi
+echo "ℹ️  Option C 활성화: 데이터는 Git에서 관리하지 않습니다"
+echo "    코드만 Git 동기화, 데이터는 SCP 등으로 전송하세요"
 
 # 2. 원격 저장소와 동기화
 echo "📡 원격 저장소 확인 중..."
@@ -28,8 +22,8 @@ BASE=$(git merge-base @ @{u})
 if [ $LOCAL = $REMOTE ]; then
     echo "✅ 이미 최신 상태입니다"
 elif [ $LOCAL = $BASE ]; then
-    echo "⬇️ 원격 저장소에서 변경사항 가져오기"
-    git pull origin main
+    echo "⬇️ 원격 저장소에서 변경사항 가져오기 (코드만)"
+    GIT_LFS_SKIP_SMUDGE=1 git pull origin main
     echo "✅ 동기화 완료"
 elif [ $REMOTE = $BASE ]; then
     echo "⬆️ 로컬 변경사항을 원격으로 푸시"
@@ -49,7 +43,7 @@ else
             echo "✅ 로컬 버전으로 강제 푸시 완료"
             ;;
         2)
-            git reset --hard origin/main
+            GIT_LFS_SKIP_SMUDGE=1 git reset --hard origin/main
             echo "✅ 원격 버전으로 리셋 완료"
             ;;
         3)
