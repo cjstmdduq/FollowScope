@@ -10,7 +10,8 @@ import subprocess
 from datetime import datetime
 
 # 서버 정보
-SERVER_IP = "52.78.99.213"
+# Note: Keep this consistent with README server info
+SERVER_IP = "3.35.55.31"
 SERVER_USER = "ubuntu"
 PROJECT_PATH = "~/FollowScope"
 SERVICE_NAME = "followscope"
