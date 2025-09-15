@@ -171,6 +171,26 @@ python update_feeds.py
 scp -i ~/Downloads/LightsailDefaultKey-ap-northeast-2.pem ubuntu@3.35.55.31:/home/ubuntu/FollowScope/FollowScope/data/feeds/feeds.json ./FollowScope/data/feeds/feeds.json
 ```
 
+## 🖥️ 로컬 실행 (Quickstart)
+
+로컬에서 웹 앱을 실행하려면 아래 스크립트를 사용하세요.
+
+```bash
+# 1) 최초 또는 의존성 변경 시
+chmod +x run_local.sh
+./run_local.sh
+
+# 2) 또는 수동으로
+python3 -m venv venv
+./venv/bin/pip install -r requirements.txt
+./venv/bin/python web_app/app.py
+```
+
+문제 해결 팁:
+- 포트 충돌 시: 8080 포트를 사용하는 프로세스를 종료하거나 `web_app/app.py`의 `app.run(..., port=8080)`을 변경
+- 데이터 경로: 모든 경로는 프로젝트 루트 하위 `FollowScope/data/...`를 기준으로 자동 인식됨
+- macOS 권한 메시지 발생 시: 터미널 재시작 또는 보안 설정 확인
+
 ## 💾 대용량 데이터 관리 (Git LFS)
 
 FollowScope는 Git LFS를 사용하여 로컬과 AWS 서버 간 데이터를 양방향으로 동기화합니다.
