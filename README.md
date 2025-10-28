@@ -63,15 +63,15 @@ FollowScope/
 │   ├── app.py        # 메인 서버
 │   ├── static/       # CSS, JS
 │   └── templates/    # HTML
-├── FollowScope/data/  # 데이터 저장소
-│   ├── products/     # 제품 데이터
-│   ├── reviews/      # 리뷰 데이터
-│   └── feeds/        # 피드 데이터
+├── data/               # 데이터 저장소
+│   ├── products/       # 제품 데이터
+│   ├── reviews/        # 리뷰 데이터
+│   └── feeds/          # 피드 데이터
 └── scraping/         # 데이터 수집
 ```
 
 ## 기타
 
-- **데이터**: `FollowScope/data/` 폴더에 CSV/JSON 저장
+- **데이터**: `data/` 폴더에 CSV/JSON 저장
 - **포트 변경**: `web_app/app.py`에서 수정 가능
 - **요구사항**: Python 3.x

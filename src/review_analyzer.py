@@ -366,7 +366,7 @@ def process_review_data(review_data_path, period_days=30):
 
 if __name__ == "__main__":
     # 테스트 실행
-    review_path = Path(__file__).parent.parent / "FollowScope" / "data" / "reviews"
+    review_path = Path(__file__).parent.parent / "data" / "reviews"
     
     print(f"Review path: {review_path}")
     print(f"Path exists: {review_path.exists()}")

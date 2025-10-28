@@ -73,8 +73,8 @@ def get_competitor_rules(competitor_name):
     return DEFAULT_RULES
 
 # Data file paths
-RAW_DATA_PATH = 'FollowScope/data/raw/'
-PROCESSED_DATA_PATH = 'FollowScope/data/processed/'
+RAW_DATA_PATH = 'data/raw/'
+PROCESSED_DATA_PATH = 'data/processed/'
 
 # Dashboard configuration
 DASHBOARD_TITLE = "FollowScope - Competitive Analysis Dashboard"

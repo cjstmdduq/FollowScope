@@ -23,10 +23,10 @@ from datetime import datetime
 
 # Fix paths for web app
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PRODUCT_DATA_PATH = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'products')
-REVIEW_DATA_PATH = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'reviews')
-LIVE_DATA_PATH = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'live')
-COUPON_DATA_PATH = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'coupons')
+PRODUCT_DATA_PATH = os.path.join(PROJECT_ROOT, 'data', 'products')
+REVIEW_DATA_PATH = os.path.join(PROJECT_ROOT, 'data', 'reviews')
+LIVE_DATA_PATH = os.path.join(PROJECT_ROOT, 'data', 'live')
+COUPON_DATA_PATH = os.path.join(PROJECT_ROOT, 'data', 'coupons')
 MACRO_DATA_PATH = os.path.join(PROJECT_ROOT, 'scraping', 'macros')
 
 app = Flask(__name__)
@@ -722,7 +722,7 @@ def get_feeds():
         per_page = request.args.get('per_page', 10, type=int)
         
         # Load feeds from JSON file
-        feeds_file = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'feeds', 'feeds.json')
+        feeds_file = os.path.join(PROJECT_ROOT, 'data', 'feeds', 'feeds.json')
         
         if not os.path.exists(feeds_file):
             return jsonify({'feeds': [], 'total': 0, 'page': page, 'per_page': per_page})
@@ -771,7 +771,7 @@ def create_feed():
         }
         
         # Load existing feeds
-        feeds_file = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'feeds', 'feeds.json')
+        feeds_file = os.path.join(PROJECT_ROOT, 'data', 'feeds', 'feeds.json')
         
         if os.path.exists(feeds_file):
             with open(feeds_file, 'r', encoding='utf-8') as f:
@@ -799,7 +799,7 @@ def update_feed(feed_id):
         data = request.get_json()
         
         # Load existing feeds
-        feeds_file = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'feeds', 'feeds.json')
+        feeds_file = os.path.join(PROJECT_ROOT, 'data', 'feeds', 'feeds.json')
         
         if not os.path.exists(feeds_file):
             return jsonify({'error': 'Feed not found'}), 404
@@ -840,7 +840,7 @@ def delete_feed_images(image_urls):
             # Extract filename from URL (e.g., "/api/feed-image/filename.webp" -> "filename.webp")
             if image_url.startswith('/api/feed-image/'):
                 filename = image_url.replace('/api/feed-image/', '')
-                image_path = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'feeds', 'images', filename)
+                image_path = os.path.join(PROJECT_ROOT, 'data', 'feeds', 'images', filename)
 
                 if os.path.exists(image_path):
                     os.remove(image_path)
@@ -911,8 +911,8 @@ def delete_feed(feed_id):
 def cleanup_orphaned_images():
     """Clean up orphaned images that are no longer referenced by any feed"""
     try:
-        feeds_file = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'feeds', 'feeds.json')
-        images_dir = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'feeds', 'images')
+        feeds_file = os.path.join(PROJECT_ROOT, 'data', 'feeds', 'feeds.json')
+        images_dir = os.path.join(PROJECT_ROOT, 'data', 'feeds', 'images')
 
         if not os.path.exists(feeds_file) or not os.path.exists(images_dir):
             return jsonify({'message': 'No feeds or images directory found'}), 200
@@ -1059,7 +1059,7 @@ def upload_image():
         filename = f"{timestamp}_{safe_filename}.webp"
 
         # Save optimized image
-        upload_path = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'feeds', 'images')
+        upload_path = os.path.join(PROJECT_ROOT, 'data', 'feeds', 'images')
         os.makedirs(upload_path, exist_ok=True)
 
         filepath = os.path.join(upload_path, filename)
@@ -1091,7 +1091,7 @@ def upload_image():
 def serve_feed_image(filename):
     """Serve feed images"""
     try:
-        image_path = os.path.join(PROJECT_ROOT, 'FollowScope', 'data', 'feeds', 'images', filename)
+        image_path = os.path.join(PROJECT_ROOT, 'data', 'feeds', 'images', filename)
         if os.path.exists(image_path):
             from flask import send_file
             return send_file(image_path)
