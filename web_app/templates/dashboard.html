@@ -161,7 +161,7 @@
                 <h2>크롤링 도구</h2>
                 <p>자주 사용하는 크롤링/매크로 스크립트 목록입니다</p>
             </div>
-            <div id="macroList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px;"></div>
+            <div id="macroList" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;"></div>
         </div>
 
         <!-- Feed Tab -->
@@ -381,26 +381,46 @@ async function initializeMacros() {
         }
 
         container.innerHTML = '';
-        macros.forEach(m => {
+        macros.forEach((m, index) => {
             const card = document.createElement('div');
             card.style.border = '1px solid #e5e7eb';
             card.style.borderRadius = '10px';
             card.style.padding = '14px';
             card.style.background = 'white';
+            const previewId = `macro-preview-${index}`;
             card.innerHTML = `
-                <h4 style="margin: 0 0 8px 0; font-size: 16px;">${m.display_name || m.filename}</h4>
-                <p style="color:#6b7280; font-size: 12px; margin: 0 0 12px 0;">${m.filename}</p>
+                <h4 style="margin: 0 0 12px 0; font-size: 16px;">${m.display_name || m.filename}</h4>
+                <div id="${previewId}" style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px; padding:10px; margin-bottom:12px; max-height:300px; overflow-y:auto;">
+                    <pre style="margin:0; font-size:12px; white-space:pre-wrap; word-wrap:break-word; font-family:monospace; color:#374151;">로딩 중...</pre>
+                </div>
                 <div style="display:flex; gap:8px;">
-                    <a class="btn-secondary" href="/api/macro/${m.filename}" target="_blank" style="text-decoration:none; padding:6px 10px; border:1px solid #e5e7eb; border-radius:6px;">
-                        원본 보기
-                    </a>
-                    <button class="btn-primary" style="padding:6px 10px; border:none; border-radius:6px; background:#2563eb; color:white;" onclick="copyMacro('${m.filename}')">복사</button>
+                    <button class="btn-secondary" style="padding:6px 10px; border:1px solid #e5e7eb; border-radius:6px; background:white; cursor:pointer;" onclick="toggleMacroPreview('${m.filename}', '${previewId}', this)">
+                        <i class="fas fa-eye-slash"></i> 코드 숨기기
+                    </button>
+                    <button class="btn-primary" style="padding:6px 10px; border:none; border-radius:6px; background:#2563eb; color:white; cursor:pointer;" onclick="copyMacro('${m.filename}')">
+                        <i class="fas fa-copy"></i> 복사
+                    </button>
                 </div>
             `;
             container.appendChild(card);
+
+            // Load code immediately
+            loadMacroCode(m.filename, previewId);
         });
     } catch (e) {
         container.innerHTML = '<p>크롤링 도구 목록을 불러오는데 실패했습니다.</p>';
+    }
+}
+
+async function loadMacroCode(filename, previewId) {
+    const preview = document.getElementById(previewId);
+    try {
+        const res = await fetch(`/api/macro/${filename}`);
+        const text = await res.text();
+        preview.querySelector('pre').textContent = text;
+        preview.dataset.loaded = 'true';
+    } catch (e) {
+        preview.querySelector('pre').textContent = '코드를 불러오는데 실패했습니다.';
     }
 }
 
@@ -411,7 +431,22 @@ async function copyMacro(filename) {
         await navigator.clipboard.writeText(text);
         alert('클립보드에 복사되었습니다.');
     } catch (e) {
-        alert('복사 실패. 원본 보기를 이용하세요.');
+        alert('복사 실패. 다시 시도해주세요.');
+    }
+}
+
+function toggleMacroPreview(filename, previewId, button) {
+    const preview = document.getElementById(previewId);
+    const isVisible = preview.style.display !== 'none';
+
+    if (isVisible) {
+        // Hide preview
+        preview.style.display = 'none';
+        button.innerHTML = '<i class="fas fa-eye"></i> 코드 보기';
+    } else {
+        // Show preview
+        preview.style.display = 'block';
+        button.innerHTML = '<i class="fas fa-eye-slash"></i> 코드 숨기기';
     }
 }
 </script>

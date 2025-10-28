@@ -618,15 +618,25 @@ def get_macro_list():
         
         macro_files = []
         display_name_map = {
-            'coupon_scraper.js': '쿠폰 추출기',
-            'live_chat_scraper.js': '라이브 채팅 구매인증 추출기',
-            'live_scraper.js': '라이브 추출기',
             'option_scraper_2depth.js': '옵션 추출기 (2단계)',
             'option_scraper_3depth.js': '옵션 추출기 (3단계)',
+            'coupon_scraper.js': '쿠폰 추출기',
             'review_scraper_by_date.js': '리뷰 날짜별 추출기',
+            'live_scraper.js': '라이브 추출기',
+            'live_chat_scraper.js': '라이브 채팅 구매인증 추출기',
             'price_monitor.js': '가격 모니터링 매크로',
             'bulk_data_scraper.js': '대량 데이터 수집 매크로',
         }
+
+        # Priority order for sorting
+        priority_order = [
+            'option_scraper_3depth.js',
+            'option_scraper_2depth.js',
+            'coupon_scraper.js',
+            'review_scraper_by_date.js',
+            'live_scraper.js',
+            'live_chat_scraper.js',
+        ]
         token_map = {
             'analysis': '분석',
             'bulk': '대량',
@@ -660,13 +670,23 @@ def get_macro_list():
                         for token in tokens:
                             translated.append(token_map.get(token, token))
                         display_name = ' '.join(filter(None, translated)) or base.replace('_', ' ')
-                
+
                 macro_files.append({
                     'filename': filename,
                     'display_name': display_name,
                     'id': filename.replace('.js', '').replace('_', '-')
                 })
-        
+
+        # Sort by priority order, then alphabetically
+        def get_sort_key(macro):
+            filename = macro['filename']
+            if filename in priority_order:
+                return (0, priority_order.index(filename))
+            else:
+                return (1, filename)
+
+        macro_files.sort(key=get_sort_key)
+
         return jsonify(macro_files)
         
     except Exception as e:

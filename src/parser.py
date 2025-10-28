@@ -294,40 +294,51 @@ def extract_product_attributes_from_csv(row, category=None):
                 # Check for dimension patterns like "폭 110cm x 50cm" (딩굴) or "110cm x 50cm" (로하우스)
                 dimension_pattern = r'(?:폭\s*)?(\d+)\s*cm\s*x\s*(\d+)\s*cm'
                 dim_match = re.search(dimension_pattern, length_str)
-                
+
                 if dim_match:
                     # This contains both width and length
                     if not attributes['width']:
                         attributes['width'] = dim_match.group(1)
                     attributes['length'] = dim_match.group(2)
                 else:
-                    # Handle "Xm" or "XmYcm" format
-                    meter_pattern = r'(\d+(?:\.\d+)?)\s*m'
-                    cm_pattern = r'(\d+)\s*cm'
-                    
-                    length_cm = 0
-                    
-                    # First check if it's a combined format like "1m50cm"
-                    combined_pattern = r'(\d+)\s*m\s*(\d+)\s*cm'
-                    combined_match = re.search(combined_pattern, length_str)
-                    
-                    if combined_match:
-                        # Handle "XmYcm" format
-                        length_cm = float(combined_match.group(1)) * 100 + float(combined_match.group(2))
+                    # Check for mixed units like "140cm x 1m" (로하우스)
+                    mixed_pattern = r'(\d+)\s*cm\s*x\s*(\d+(?:\.\d+)?)\s*m'
+                    mixed_match = re.search(mixed_pattern, length_str)
+
+                    if mixed_match:
+                        # First number is width in cm, second is length in meters
+                        if not attributes['width']:
+                            attributes['width'] = mixed_match.group(1)
+                        length_m = float(mixed_match.group(2))
+                        attributes['length'] = str(length_m * 100)  # Convert to cm
                     else:
-                        # Check for meters only
-                        meter_match = re.search(meter_pattern, length_str)
-                        if meter_match:
-                            length_cm += float(meter_match.group(1)) * 100
-                        
-                        # Check for cm only (with or without '길이' prefix)
-                        cm_only_pattern = r'(?:길이\s*)?(\d+)\s*cm'
-                        cm_match = re.search(cm_only_pattern, length_str)
-                        if cm_match and length_cm == 0:  # Only if no meters found
-                            length_cm = float(cm_match.group(1))
-                    
-                    if length_cm > 0:
-                        attributes['length'] = str(length_cm)
+                        # Handle "Xm" or "XmYcm" format
+                        meter_pattern = r'(\d+(?:\.\d+)?)\s*m'
+                        cm_pattern = r'(\d+)\s*cm'
+
+                        length_cm = 0
+
+                        # First check if it's a combined format like "1m50cm"
+                        combined_pattern = r'(\d+)\s*m\s*(\d+)\s*cm'
+                        combined_match = re.search(combined_pattern, length_str)
+
+                        if combined_match:
+                            # Handle "XmYcm" format
+                            length_cm = float(combined_match.group(1)) * 100 + float(combined_match.group(2))
+                        else:
+                            # Check for meters only
+                            meter_match = re.search(meter_pattern, length_str)
+                            if meter_match:
+                                length_cm += float(meter_match.group(1)) * 100
+
+                            # Check for cm only (with or without '길이' prefix)
+                            cm_only_pattern = r'(?:길이\s*)?(\d+)\s*cm'
+                            cm_match = re.search(cm_only_pattern, length_str)
+                            if cm_match and length_cm == 0:  # Only if no meters found
+                                length_cm = float(cm_match.group(1))
+
+                        if length_cm > 0:
+                            attributes['length'] = str(length_cm)
     
     # Extract price from 최종가격
     if pd.notna(row.get('최종가격')):

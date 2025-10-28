@@ -535,27 +535,9 @@ function createHeatmap() {
     const controlDiv = document.createElement('div');
     controlDiv.style.marginBottom = '20px';
     controlDiv.innerHTML = `
-        <div style="margin-bottom: 15px;">
-            <label style="margin-right: 10px;">보기 모드:</label>
-            <select id="heatmapViewMode" style="padding: 8px; border: 1px solid #e5e7eb; border-radius: 6px; margin-right: 20px;">
-                <option value="all-competitors">전체 경쟁사 가격 비교</option>
-                <option value="side-by-side">경쟁사별 비교</option>
-                <option value="combined">통합 평균</option>
-                <option value="single">개별 경쟁사</option>
-            </select>
-            
-            <label style="margin-right: 10px;">그리드 크기:</label>
-            <select id="heatmapGridSize" style="padding: 8px; border: 1px solid #e5e7eb; border-radius: 6px;">
-                <option value="all">전체 표시</option>
-                <option value="5">5x5</option>
-                <option value="8">8x8</option>
-                <option value="10">10x10</option>
-            </select>
-        </div>
-        
-        <div id="competitorSelectDiv" style="margin-bottom: 15px; display: none;">
+        <div id="competitorSelectDiv" style="margin-bottom: 15px;">
             <label style="margin-right: 10px;">경쟁사 선택:</label>
-            <button onclick="selectAllCompetitors(true)" style="padding: 6px 12px; margin-right: 10px; border: 1px solid #e5e7eb; border-radius: 6px; background: white; cursor: pointer; font-size: 13px; transition: all 0.2s;" 
+            <button onclick="selectAllCompetitors(true)" style="padding: 6px 12px; margin-right: 10px; border: 1px solid #e5e7eb; border-radius: 6px; background: white; cursor: pointer; font-size: 13px; transition: all 0.2s;"
                     onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='white'">
                 <i class="fas fa-check-square"></i> 전체 선택
             </button>
@@ -567,46 +549,24 @@ function createHeatmap() {
         </div>
     `;
     container.appendChild(controlDiv);
-    
+
     // Populate competitor checkboxes based on current data
     populateHeatmapCompetitorCheckboxes();
-    
-    // Add change listeners
-    document.getElementById('heatmapViewMode').addEventListener('change', function() {
-        const viewMode = this.value;
-        const competitorSelectDiv = document.getElementById('competitorSelectDiv');
-        // Show competitor selection for all modes except combined
-        if (viewMode === 'combined') {
-            competitorSelectDiv.style.display = 'none';
-        } else {
-            competitorSelectDiv.style.display = 'block';
-        }
-        updateHeatmap();
-    });
-    document.getElementById('heatmapGridSize').addEventListener('change', updateHeatmap);
-    
+
     // Create heatmap container
     const heatmapDiv = document.createElement('div');
     heatmapDiv.id = 'heatmapContent';
     container.appendChild(heatmapDiv);
-    
-    // Show competitor selection for initial view
-    const initialViewMode = document.getElementById('heatmapViewMode').value;
-    if (initialViewMode !== 'combined') {
-        document.getElementById('competitorSelectDiv').style.display = 'block';
-    }
-    
+
     // Initial heatmap
     updateHeatmap();
 }
 
 async function updateHeatmap() {
-    const viewMode = document.getElementById('heatmapViewMode').value;
-    const gridSize = document.getElementById('heatmapGridSize').value;
     const heatmapContent = document.getElementById('heatmapContent');
     const productTypeSelect = document.getElementById('heatmapProductTypeSelect');
     const productType = productTypeSelect ? productTypeSelect.value : 'roll';
-    
+
     // Check if product type changed for this tab
     if (productType !== tabProductTypes.heatmap) {
         tabProductTypes.heatmap = productType;
@@ -618,24 +578,24 @@ async function updateHeatmap() {
         updateHeatmap();
         return;
     }
-    
+
     heatmapContent.innerHTML = '';
-    
+
     // Get selected competitors
     const selectedCompetitors = [];
     document.querySelectorAll('#competitorCheckboxes input:checked').forEach(cb => {
         selectedCompetitors.push(cb.value);
     });
-    
+
     // Check if any competitors are selected
     if (selectedCompetitors.length === 0) {
         heatmapContent.innerHTML = '<p>최소 하나의 경쟁사를 선택해주세요.</p>';
         return;
     }
-    
+
     // Filter data based on selected competitors and product type
     let displayData = allData.filter(d => selectedCompetitors.includes(d.Competitor));
-    
+
     // Apply product type filter
     if (productType) {
         displayData = displayData.filter(d => {
@@ -650,33 +610,18 @@ async function updateHeatmap() {
             return true;
         });
     }
-    
+
     if (displayData.length === 0) {
         heatmapContent.innerHTML = '<p>데이터가 없습니다.</p>';
         return;
     }
-    
-    // Get dimensions and apply grid size if needed
-    let uniqueThicknesses = [...new Set(allData.map(d => d.Thickness_cm))].sort((a, b) => a - b);
-    let uniqueWidths = [...new Set(allData.map(d => d.Width_cm))].sort((a, b) => a - b);
-    
-    if (gridSize !== 'all') {
-        const size = parseInt(gridSize);
-        const thicknessStep = Math.ceil(uniqueThicknesses.length / size);
-        const widthStep = Math.ceil(uniqueWidths.length / size);
-        uniqueThicknesses = uniqueThicknesses.filter((_, i) => i % thicknessStep === 0).slice(0, size);
-        uniqueWidths = uniqueWidths.filter((_, i) => i % widthStep === 0).slice(0, size);
-    }
-    
-    if (viewMode === 'all-competitors') {
-        createAllCompetitorsHeatmap(displayData, uniqueThicknesses, uniqueWidths);
-    } else if (viewMode === 'side-by-side') {
-        createSideBySideHeatmaps(displayData, selectedCompetitors, uniqueThicknesses, uniqueWidths);
-    } else if (viewMode === 'combined') {
-        createCombinedHeatmap(displayData, uniqueThicknesses, uniqueWidths);
-    } else {
-        createSingleHeatmap(displayData, uniqueThicknesses, uniqueWidths);
-    }
+
+    // Get all dimensions (no grid size filtering)
+    const uniqueThicknesses = [...new Set(allData.map(d => d.Thickness_cm))].sort((a, b) => a - b);
+    const uniqueWidths = [...new Set(allData.map(d => d.Width_cm))].sort((a, b) => a - b);
+
+    // Always show all-competitors heatmap
+    createAllCompetitorsHeatmap(displayData, uniqueThicknesses, uniqueWidths);
 }
 
 // Create heatmap showing all competitors' prices in each cell
@@ -1668,10 +1613,6 @@ function analyzePatterns() {
         html += `
             <div class="pattern-card">
                 <h4>${competitor}</h4>
-                <div class="pattern-stat">
-                    <span class="pattern-label">총 라이브 횟수</span>
-                    <span class="pattern-value">${pattern.totalCount}회</span>
-                </div>
                 <div class="pattern-stat">
                     <span class="pattern-label">선호 시간대</span>
                     <span class="pattern-value">${mostCommonSlot ? mostCommonSlot[0] : '패턴 없음'}</span>
