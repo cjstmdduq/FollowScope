@@ -61,19 +61,72 @@ const quickLinksData = {
     "TPU매트": {
         icon: "fa-shield-alt",
         links: {
-            // TPU 매트 링크 추가
+            "따사룸": {
+                url: "https://brand.naver.com/ddasaroom/products/5569937047",
+                code: "5569937047"
+            },
+            "맘스리치": {
+                url: "https://smartstore.naver.com/momsrich/products/5076628927",
+                code: "5076628927"
+            },
+            "허그매트": {
+                url: "https://smartstore.naver.com/hugmat/products/7618127247",
+                code: "7618127247"
+            },
+            "봄봄": {
+                url: "https://smartstore.naver.com/bombommat/products/7317158601",
+                code: "7317158601"
+            },
+            "룸인어스": {
+                url: "https://brand.naver.com/roominus/products/6081992964",
+                code: "6081992964"
+            },
+            "깜꼬": {
+                url: "https://brand.naver.com/toyture/products/7029634245",
+                code: "7029634245"
+            }
         }
     },
     "양면매트": {
         icon: "fa-layer-group",
         links: {
-            // 양면매트 링크 추가
+            "파크론": {
+                url: "https://brand.naver.com/parklonmall/products/449050652",
+                code: "449050652"
+            },
+            "고려화학": {
+                url: "https://brand.naver.com/kormat/products/358967037",
+                code: "358967037"
+            },
+            "원빈산업": {
+                url: "https://smartstore.naver.com/onepic/products/261371217",
+                code: "261371217"
+            },
+            "알집": {
+                url: "https://brand.naver.com/alzipmat/products/5809480483",
+                code: "5809480483"
+            }
         }
     },
     "폴더매트": {
         icon: "fa-folder",
         links: {
-            // 폴더매트 링크 추가
+            "리포소": {
+                url: "https://smartstore.naver.com/riposo-home/products/11061381895",
+                code: "11061381895"
+            },
+            "꼬망세": {
+                url: "https://smartstore.naver.com/commencer_official/products/6771309741",
+                code: "6771309741"
+            },
+            "본베베": {
+                url: "https://brand.naver.com/bonbebe/products/2968620816",
+                code: "2968620816"
+            },
+            "크림하우스": {
+                url: "https://smartstore.naver.com/riposo-home/products/11061381895",
+                code: "11061381895"
+            }
         }
     },
     "강아지롤매트": {
