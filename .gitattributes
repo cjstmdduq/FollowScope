@@ -1,0 +1,2 @@
+# Git LFS disabled for data files (Option C)
+# Historical LFS objects remain; new commits will not use LFS for data.

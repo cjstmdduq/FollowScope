@@ -1,0 +1,2059 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" onclick="toggleMobileSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">경쟁사 동향</h3>
+            <ul class="sidebar-menu">
+                <li>
+                    <button class="sidebar-btn" onclick="location.href='/'">
+                        <i class="fas fa-stream"></i>
+                        <span>Feed</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">제품 비교</h3>
+            <ul class="sidebar-menu">
+                <li>
+                    <button class="sidebar-btn" onclick="location.href='/dashboard'">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>대시보드</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">관리</h3>
+            <ul class="sidebar-menu">
+                <li>
+                    <button class="sidebar-btn active" onclick="location.href='/data'">
+                        <i class="fas fa-database"></i>
+                        <span>데이터센터</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-section" style="margin-top: 30px; padding-top: 30px; border-top: 1px solid #e5e7eb;">
+            <h3 class="sidebar-title">데이터 업로드</h3>
+            <ul class="sidebar-menu">
+                <li>
+                    <button class="sidebar-btn" onclick="showUploadTab('product', event)">
+                        <i class="fas fa-box"></i>
+                        <span>제품 데이터</span>
+                    </button>
+                </li>
+                <li>
+                    <button class="sidebar-btn" onclick="showUploadTab('review', event)">
+                        <i class="fas fa-star"></i>
+                        <span>리뷰 데이터</span>
+                    </button>
+                </li>
+                <li>
+                    <button class="sidebar-btn" onclick="showUploadTab('live', event)">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>라이브 데이터</span>
+                    </button>
+                </li>
+                <li>
+                    <button class="sidebar-btn" onclick="showUploadTab('coupon', event)">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>쿠폰 데이터</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">데이터 도구</h3>
+            <ul class="sidebar-menu">
+                <li>
+                    <button class="sidebar-btn" onclick="showUploadTab('live', event)">
+                        <i class="fas fa-broadcast-tower"></i>
+                        <span>라이브 데이터</span>
+                    </button>
+                </li>
+                <li>
+                    <button class="sidebar-btn" onclick="showUploadTab('macros', event)">
+                        <i class="fas fa-code"></i>
+                        <span>크롤링 도구</span>
+                    </button>
+                </li>
+                <li>
+                    <button class="sidebar-btn" onclick="showUploadTab('status', event)">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>데이터 현황</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Quick Links Sidebar -->
+    <div id="quickLinksPanel" class="sidebar quick-links-sidebar">
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">퀵링크</h3>
+            <div id="quickLinksCategories">
+                <!-- Categories will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="upload-content">
+        <!-- Product Data Upload -->
+        <div id="product-upload" class="upload-section active">
+            <div class="upload-info">
+                <h2>제품 데이터 업로드</h2>
+                <p>경쟁사별 제품 가격 정보를 업로드합니다</p>
+                
+                <div class="category-selection">
+                    <label>업로드할 카테고리:</label>
+                    <select id="uploadCategory" class="form-select">
+                        <option value="roll">롤매트</option>
+                        <option value="puzzle">퍼즐매트</option>
+                        <option value="tpu">TPU매트</option>
+                        <option value="double_side">양면매트</option>
+                        <option value="folder">폴더매트</option>
+                    </select>
+                    <p class="category-note">* 선택한 카테고리 폴더에 파일이 저장됩니다</p>
+                </div>
+                
+                <div class="data-format">
+                    <h4>필수 컬럼:</h4>
+                    <ul>
+                        <li>옵션1: 디자인/색상 정보</li>
+                        <li>옵션2: 두께와 폭 (예: "두께1cm / 폭110cm")</li>
+                        <li>옵션3: 길이 (예: "길이 50cm", "2m50cm")</li>
+                        <li>최종가격: 제품 가격</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="upload-box" data-type="product">
+                <div class="upload-area">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h3>파일을 드래그하여 놓거나 클릭하여 선택</h3>
+                    <p>지원 형식: CSV, Excel (.xlsx, .xls)</p>
+                    <input type="file" class="file-input" accept=".csv,.xlsx,.xls" multiple>
+                </div>
+                <div class="file-list"></div>
+                <div class="upload-actions">
+                    <button class="btn-primary upload-btn" disabled>
+                        <i class="fas fa-upload"></i> 업로드
+                    </button>
+                    <button class="btn-secondary clear-btn">
+                        <i class="fas fa-times"></i> 초기화
+                    </button>
+                </div>
+            </div>
+
+            <!-- Product Data Table -->
+            <div class="data-table-section">
+                <div class="section-header">
+                    <h3>업로드된 제품 데이터</h3>
+                    <p>현재 시스템에 등록된 모든 제품 정보입니다</p>
+                    <div class="last-update-info">
+                        <i class="fas fa-clock"></i>
+                        <span>최신화: <span id="dataLastUpdate">-</span></span>
+                    </div>
+                </div>
+                
+                <div class="table-controls">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="productSearchInput" placeholder="제품명, 경쟁사 검색...">
+                    </div>
+                    <select id="productCategoryFilter" class="filter-select">
+                        <option value="">모든 카테고리</option>
+                    </select>
+                    <select id="productCompetitorFilter" class="filter-select">
+                        <option value="">모든 경쟁사</option>
+                    </select>
+                    <button class="btn-secondary" onclick="exportProductData()">
+                        <i class="fas fa-download"></i> 내보내기
+                    </button>
+                    <button class="btn-secondary" onclick="refreshProductData(event)">
+                        <i class="fas fa-sync"></i> 새로고침
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table id="productDataTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th onclick="sortProductTable('product_category')">카테고리 <i class="fas fa-sort"></i></th>
+                                <th onclick="sortProductTable('Competitor')">경쟁사 <i class="fas fa-sort"></i></th>
+                                <th onclick="sortProductTable('Design')">디자인 <i class="fas fa-sort"></i></th>
+                                <th onclick="sortProductTable('Thickness_cm')">두께(cm) <i class="fas fa-sort"></i></th>
+                                <th onclick="sortProductTable('Width_cm')">너비(cm) <i class="fas fa-sort"></i></th>
+                                <th onclick="sortProductTable('Length_cm')">길이(cm) <i class="fas fa-sort"></i></th>
+                                <th onclick="sortProductTable('Price')">가격 <i class="fas fa-sort"></i></th>
+                                <th onclick="sortProductTable('Price_per_Volume')">가격/부피 <i class="fas fa-sort"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody id="productTableBody">
+                            <!-- Data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Data -->
+        <div id="live-upload" class="upload-section">
+            <div class="data-header">
+                <h2>라이브캘린더 데이터</h2>
+                <div class="data-actions">
+                    <div class="filter-controls">
+                        <input type="text" id="liveSearchInput" placeholder="검색..." class="search-input">
+                        <select id="liveCompetitorFilter" class="filter-select">
+                            <option value="">모든 브랜드</option>
+                        </select>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn-refresh" onclick="refreshLiveData(event)">
+                            <i class="fas fa-sync-alt"></i> 새로고침
+                        </button>
+                        <button class="btn-export" onclick="exportLiveData()">
+                            <i class="fas fa-download"></i> 내보내기
+                        </button>
+                    </div>
+                </div>
+                <div class="last-update-info">
+                    마지막 업데이트: <span id="liveLastUpdate">-</span>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th onclick="sortLiveTable('date')">날짜 <i class="fas fa-sort"></i></th>
+                            <th onclick="sortLiveTable('time')">시간 <i class="fas fa-sort"></i></th>
+                            <th onclick="sortLiveTable('competitor')">브랜드 <i class="fas fa-sort"></i></th>
+                            <th onclick="sortLiveTable('title')">라이브 제목 <i class="fas fa-sort"></i></th>
+                            <th>설명</th>
+                        </tr>
+                    </thead>
+                    <tbody id="liveTableBody">
+                        <!-- Data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Live Data Upload Section -->
+        <div id="live-upload-section" class="upload-section">
+            <div class="upload-info">
+                <h2>라이브 데이터 업로드</h2>
+                <p>라이브 방송 일정을 업로드합니다</p>
+                <div class="data-format">
+                    <h4>필수 컬럼 (Google Calendar 형식):</h4>
+                    <ul>
+                        <li>Subject: 브랜드명</li>
+                        <li>Start Date: 시작 날짜 (YYYY-MM-DD)</li>
+                        <li>Start Time: 시작 시간 (HH:MM)</li>
+                        <li>Description: 라이브 제목</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="upload-box" data-type="promotion">
+                <div class="upload-area">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h3>파일을 드래그하여 놓거나 클릭하여 선택</h3>
+                    <p>지원 형식: CSV (Google Calendar 형식)</p>
+                    <input type="file" class="file-input" accept=".csv">
+                </div>
+                <div class="file-list"></div>
+                <div class="upload-actions">
+                    <button class="btn-primary upload-btn" disabled>
+                        <i class="fas fa-upload"></i> 업로드
+                    </button>
+                    <button class="btn-secondary clear-btn">
+                        <i class="fas fa-times"></i> 초기화
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Review Data Upload -->
+        <div id="review-upload" class="upload-section">
+            <div class="upload-info">
+                <h2>리뷰 데이터 업로드</h2>
+                <p>경쟁사별 리뷰 수와 평점 정보를 업로드합니다</p>
+                <div class="data-format">
+                    <h4>필수 컬럼:</h4>
+                    <ul>
+                        <li>date: 날짜 (YYYY-MM-DD)</li>
+                        <li>competitor: 경쟁사명</li>
+                        <li>review_count: 리뷰 수</li>
+                        <li>average_rating: 평균 평점 (0-5)</li>
+                        <li>product_name: 제품명 (선택)</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="upload-box" data-type="review">
+                <div class="upload-area">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h3>파일을 드래그하여 놓거나 클릭하여 선택</h3>
+                    <p>지원 형식: CSV, Excel (.xlsx, .xls)</p>
+                    <input type="file" class="file-input" accept=".csv,.xlsx,.xls">
+                </div>
+                <div class="file-list"></div>
+                <div class="upload-actions">
+                    <button class="btn-primary upload-btn" disabled>
+                        <i class="fas fa-upload"></i> 업로드
+                    </button>
+                    <button class="btn-secondary clear-btn">
+                        <i class="fas fa-times"></i> 초기화
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coupon Data Upload -->
+        <div id="coupon-upload" class="upload-section">
+            <div class="upload-info">
+                <h2>쿠폰 데이터 업로드</h2>
+                <p>경쟁사별 쿠폰 및 할인 정보를 업로드합니다</p>
+                <div class="data-format">
+                    <h4>필수 컬럼:</h4>
+                    <ul>
+                        <li>competitor: 경쟁사명</li>
+                        <li>coupon_name: 쿠폰명</li>
+                        <li>discount_rate: 할인율 (예: "10%", "5,000원")</li>
+                        <li>start_date: 시작일 (YYYY-MM-DD, 선택)</li>
+                        <li>end_date: 종료일 (YYYY-MM-DD, 선택)</li>
+                        <li>description: 설명 (선택)</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="upload-box" data-type="coupon">
+                <div class="upload-area">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h3>파일을 드래그하여 놓거나 클릭하여 선택</h3>
+                    <p>지원 형식: CSV, Excel (.xlsx, .xls)</p>
+                    <input type="file" class="file-input" accept=".csv,.xlsx,.xls">
+                </div>
+                <div class="file-list"></div>
+                <div class="upload-actions">
+                    <button class="btn-primary upload-btn" disabled>
+                        <i class="fas fa-upload"></i> 업로드
+                    </button>
+                    <button class="btn-secondary clear-btn">
+                        <i class="fas fa-times"></i> 초기화
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Scraping Tools Section -->
+        <div id="macros-upload" class="upload-section">
+            <div class="section-header">
+                <h2>크롤링 도구 모음</h2>
+                <p>데이터 수집을 위한 JavaScript 매크로, Python 스크래퍼 등 다양한 크롤링 도구들입니다.</p>
+            </div>
+            
+            <div id="macro-container-list">
+                <!-- 매크로들이 동적으로 로드됩니다 -->
+            </div>
+
+        </div>
+
+        <!-- Data Status Section -->
+        <div id="status-upload" class="upload-section">
+            <div class="section-header">
+                <h2>현재 데이터 상태</h2>
+                <p>시스템에 저장된 모든 데이터의 현황을 확인하세요</p>
+            </div>
+            
+            <div class="status-grid">
+                <div class="status-card">
+                    <i class="fas fa-box"></i>
+                    <div class="status-info">
+                        <h3>제품 데이터</h3>
+                        <p class="status-count" id="product-count">0개</p>
+                        <p class="status-update" id="product-update">-</p>
+                    </div>
+                </div>
+                <div class="status-card">
+                    <i class="fas fa-star"></i>
+                    <div class="status-info">
+                        <h3>리뷰 데이터</h3>
+                        <p class="status-count" id="review-count">0개</p>
+                        <p class="status-update" id="review-update">-</p>
+                    </div>
+                </div>
+                <div class="status-card">
+                    <i class="fas fa-calendar-alt"></i>
+                    <div class="status-info">
+                        <h3>프로모션 데이터</h3>
+                        <p class="status-count" id="promotion-count">0개</p>
+                        <p class="status-update" id="promotion-update">-</p>
+                    </div>
+                </div>
+                <div class="status-card">
+                    <i class="fas fa-ticket-alt"></i>
+                    <div class="status-info">
+                        <h3>쿠폰 데이터</h3>
+                        <p class="status-count" id="coupon-count">0개</p>
+                        <p class="status-update" id="coupon-update">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-secondary" onclick="downloadTemplate()">
+                    <i class="fas fa-download"></i> 템플릿 다운로드
+                </button>
+                <button class="btn-secondary" onclick="reloadAllData(event)">
+                    <i class="fas fa-sync"></i> 데이터 새로고침
+                </button>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Mobile responsive improvements for upload page */
+@media screen and (max-width: 768px) {
+    .upload-container {
+        padding: 1rem;
+        margin-top: 70px;
+    }
+    
+    .upload-header h1 {
+        font-size: 24px;
+    }
+    
+    .data-status-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .upload-tabs {
+        display: flex;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        gap: 0.5rem;
+        padding: 0.5rem 0;
+    }
+    
+    .upload-tabs::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .tab-btn {
+        white-space: nowrap;
+        flex-shrink: 0;
+        padding: 0.75rem 1rem;
+        font-size: 14px;
+    }
+    
+    .upload-area {
+        padding: 2rem 1rem;
+    }
+    
+    .upload-area h3 {
+        font-size: 16px;
+    }
+    
+    .upload-area p {
+        font-size: 14px;
+    }
+    
+    .macro-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .macro-card {
+        padding: 1rem;
+    }
+    
+    /* Mobile table improvements */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -1rem;
+        padding: 0 1rem;
+    }
+    
+    .data-table {
+        min-width: 600px;
+        font-size: 14px;
+    }
+    
+    .table-controls {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .search-box {
+        width: 100%;
+    }
+    
+    .filter-select {
+        width: 100%;
+    }
+    
+    /* Mobile sidebar */
+    .sidebar {
+        position: fixed;
+        left: -100%;
+        top: 70px;
+        width: 80%;
+        max-width: 300px;
+        height: calc(100% - 70px);
+        background: white;
+        transition: left 0.3s ease;
+        z-index: 998;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        overflow-y: auto;
+    }
+    
+    .sidebar.active {
+        left: 0;
+    }
+    
+    .main-content {
+        width: 100%;
+        padding: 0;
+        margin-left: 0;
+    }
+    
+    /* Mobile form improvements */
+    .upload-box {
+        padding: 1.5rem;
+    }
+    
+    .upload-info {
+        padding: 1.5rem;
+    }
+    
+    .data-format {
+        padding: 1rem;
+        font-size: 14px;
+    }
+    
+    .category-selection {
+        padding: 1rem;
+    }
+    
+    .btn-primary, .btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Mobile macro section */
+    #macro-container-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .macro-container {
+        margin-bottom: 1rem;
+    }
+    
+    .macro-header {
+        padding: 1rem;
+    }
+    
+    .macro-title h3 {
+        font-size: 14px;
+    }
+    
+    .macro-code,
+    .macro-code-preview {
+        font-size: 12.5px;
+        padding: 3rem 1.5rem 2rem;
+        border-radius: 0 0 16px 16px;
+    }
+    
+    /* Touch-friendly buttons */
+    button {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* Improve scrolling performance */
+    * {
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Upload specific styles */
+
+.upload-section {
+    display: none;
+}
+
+.upload-section.active {
+    display: block;
+}
+
+.upload-info {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.upload-info h2 {
+    color: #1f2937;
+    margin-bottom: 10px;
+}
+
+.upload-info p {
+    color: #6b7280;
+    margin-bottom: 20px;
+}
+
+.data-format {
+    background: #f9fafb;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.data-format h4 {
+    color: #374151;
+    margin-bottom: 10px;
+}
+
+.data-format ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.data-format li {
+    color: #6b7280;
+    margin-bottom: 5px;
+}
+
+.upload-box {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.upload-area {
+    border: 2px dashed #e5e7eb;
+    border-radius: 8px;
+    padding: 60px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.upload-area:hover, .upload-area.drag-over {
+    border-color: var(--primary-color);
+    background-color: rgba(16, 185, 129, 0.05);
+}
+
+.upload-area i {
+    font-size: 60px;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+.upload-area h3 {
+    margin-bottom: 10px;
+    color: #1f2937;
+}
+
+.upload-area p {
+    color: #6b7280;
+}
+
+.file-list {
+    margin: 20px 0;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    background: #f9fafb;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.file-item i {
+    color: var(--primary-color);
+    margin-right: 10px;
+}
+
+.file-item button {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    padding: 5px 10px;
+}
+
+.upload-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.data-status {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.data-status h2 {
+    color: #1f2937;
+    margin-bottom: 20px;
+}
+
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.status-card {
+    background: #f9fafb;
+    padding: 20px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.status-card i {
+    font-size: 40px;
+    color: var(--primary-color);
+}
+
+.status-info h3 {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 5px;
+}
+
+.status-count {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 5px;
+}
+
+.status-update {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #059669;
+}
+
+.btn-primary:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background-color: white;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+}
+
+.btn-secondary:hover {
+    background-color: #f9fafb;
+}
+
+/* Macro Section Styles */
+.macro-section {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 40px;
+}
+
+.macro-section h2 {
+    color: #1f2937;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.macro-section > p {
+    color: #6b7280;
+    margin-bottom: 30px;
+}
+
+
+.macro-container {
+    position: relative;
+    margin-bottom: 24px;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #ffffff 0%, #f4f5f7 100%);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.macro-container:hover {
+    transform: translateY(-4px);
+    border-color: rgba(99, 102, 241, 0.35);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.16);
+}
+
+.macro-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid rgba(229, 231, 235, 0.6);
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.macro-header:hover {
+    background-color: rgba(248, 250, 252, 0.95);
+}
+
+.macro-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.macro-title h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #111827;
+}
+
+.expand-icon {
+    color: #6366f1;
+    font-size: 14px;
+    transition: transform 0.2s ease;
+}
+
+.copy-btn {
+    padding: 9px 16px;
+    background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+    color: #1f2937;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 999px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    font-weight: 500;
+}
+
+.copy-btn:hover {
+    transform: translateY(-1px);
+    border-color: rgba(99, 102, 241, 0.35);
+    box-shadow: 0 10px 18px rgba(99, 102, 241, 0.18);
+}
+
+.copy-btn.copied {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    color: #065f46;
+    border-color: rgba(34, 197, 94, 0.35);
+    box-shadow: 0 10px 18px rgba(34, 197, 94, 0.18);
+}
+
+.macro-preview {
+    padding: 0;
+    background: #0f172a;
+    border-top: 1px solid rgba(148, 163, 184, 0.25);
+    position: relative;
+}
+
+.macro-code-preview,
+.macro-code {
+    position: relative;
+    margin: 0;
+    padding: 40px 32px 34px;
+    background: #0f172a;
+    color: #cbd5f5;
+    font-family: 'JetBrains Mono', 'D2Coding', 'Consolas', 'Monaco', monospace;
+    font-size: 13.5px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    overflow: auto;
+    border-radius: 0 0 16px 16px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+    z-index: 0;
+}
+
+.macro-code-preview {
+    color: #a5b4fc;
+}
+
+.macro-code-preview::before,
+.macro-code::before {
+    content: '';
+    position: absolute;
+    top: 18px;
+    left: 32px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ef4444;
+    box-shadow: 14px 0 0 #f59e0b, 28px 0 0 #22c55e;
+    opacity: 0.9;
+}
+
+.macro-code-preview::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(180deg, transparent 0%, rgba(15, 23, 42, 0.95) 100%);
+    pointer-events: none;
+}
+
+.macro-code-preview::after,
+.macro-code::after {
+    pointer-events: none;
+}
+
+.macro-code-preview::-webkit-scrollbar,
+.macro-code::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+
+.macro-code-preview::-webkit-scrollbar-track,
+.macro-code::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.macro-code-preview::-webkit-scrollbar-thumb,
+.macro-code::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.35);
+    border-radius: 999px;
+}
+
+.macro-content {
+    position: relative;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+    overflow: hidden;
+    background: #0f172a;
+}
+
+.macro-preview::after,
+.macro-content::after {
+    content: attr(data-label);
+    position: absolute;
+    top: 14px;
+    right: 24px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    color: rgba(148, 163, 184, 0.75);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.macro-content.collapsed {
+    max-height: 0;
+    opacity: 0;
+}
+
+.macro-content:not(.collapsed) {
+    opacity: 1;
+}
+
+.macro-info {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f0fdf4;
+    border-left: 4px solid var(--secondary-color);
+    border-radius: 8px;
+}
+
+.macro-info h4 {
+    margin: 0 0 15px 0;
+    color: #374151;
+}
+
+.macro-info ol {
+    margin: 0;
+    padding-left: 20px;
+    color: #6b7280;
+}
+
+.macro-info li {
+    margin-bottom: 8px;
+}
+
+/* Category Selection Styles */
+.category-selection {
+    margin: 20px 0;
+    padding: 15px;
+    background: #e0f2fe;
+    border-radius: 8px;
+    border: 1px solid #7dd3fc;
+}
+
+.category-selection label {
+    display: block;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.category-selection .form-select {
+    width: 100%;
+    max-width: 300px;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: white;
+    cursor: pointer;
+}
+
+.category-note {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #0369a1;
+    font-style: italic;
+}
+
+#macro-container-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+/* Empty and error states */
+.no-macros, .error-message {
+    padding: 40px 20px;
+    text-align: center;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 2px dashed #e5e7eb;
+    margin: 20px 0;
+    grid-column: 1 / -1; /* Span across all columns */
+}
+
+.no-macros p, .error-message p {
+    color: #6b7280;
+    margin: 0;
+    font-size: 16px;
+}
+
+.error-message {
+    border-color: #fca5a5;
+    background: #fef2f2;
+}
+
+.error-message p {
+    color: #dc2626;
+}
+
+/* Data Table Section */
+.data-table-section {
+    margin-top: 40px;
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.data-table-section .section-header {
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.data-table-section .section-header h3 {
+    font-size: 20px;
+    color: #1f2937;
+    margin-bottom: 8px;
+}
+
+.data-table-section .section-header p {
+    color: #6b7280;
+    font-size: 14px;
+    margin: 0;
+}
+
+.last-update-info {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.last-update-info i {
+    color: #9ca3af;
+}
+
+.last-update-info span {
+    font-weight: 500;
+}
+
+/* Live Calendar Button Styles */
+.btn-refresh, .btn-export {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-refresh {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+}
+
+.btn-refresh:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+}
+
+.btn-refresh:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-export {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.btn-export:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+}
+
+.btn-export:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-refresh i, .btn-export i {
+    font-size: 16px;
+}
+
+/* Button loading state */
+.btn-refresh.loading, .btn-export.loading {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.btn-refresh.loading i, .btn-export.loading i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+</style>
+
+<script>
+// Tab switching for sidebar
+function showUploadTab(type, event) {
+    // Remove active class from all sidebar buttons in data sections only
+    document.querySelectorAll('.sidebar-section:nth-child(n+4) .sidebar-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Remove active class from all sections
+    document.querySelectorAll('.upload-section').forEach(section => {
+        section.classList.remove('active');
+    });
+    
+    // Add active class to clicked button
+    if (event && event.target) {
+        event.target.closest('.sidebar-btn').classList.add('active');
+    }
+    
+    // Show corresponding section
+    if (type === 'live') {
+        // For live tab, check if we're in data view or upload view
+        const isDataView = document.querySelector('.sidebar-section:nth-child(5) .sidebar-btn.active');
+        if (isDataView) {
+            document.getElementById('live-upload').classList.add('active');
+            if (liveCalendarData.length === 0) {
+                loadLiveCalendarData();
+                setupLiveCalendarControls();
+            }
+        } else {
+            document.getElementById('live-upload-section').classList.add('active');
+        }
+    } else {
+        document.getElementById(`${type}-upload`).classList.add('active');
+    }
+    
+    // Load product data when switching to product tab
+    if (type === 'product' && productData.length === 0) {
+        loadProductData();
+        setupProductDataControls();
+    }
+}
+
+// Initialize upload areas
+document.addEventListener('DOMContentLoaded', function() {
+    // Setup all upload areas first
+    document.querySelectorAll('.upload-box').forEach(box => {
+        setupUploadArea(box);
+    });
+    
+    // Then load data
+    loadDataStatus();
+    loadMacros();
+    
+    // Show status tab by default
+    showUploadTab('status', null);
+});
+
+function setupUploadArea(box) {
+    const uploadArea = box.querySelector('.upload-area');
+    const fileInput = box.querySelector('.file-input');
+    const fileList = box.querySelector('.file-list');
+    const uploadBtn = box.querySelector('.upload-btn');
+    const clearBtn = box.querySelector('.clear-btn');
+    const dataType = box.getAttribute('data-type');
+    
+    let selectedFiles = [];
+    
+    // Click to select
+    uploadArea.addEventListener('click', () => fileInput.click());
+    
+    // File selection
+    fileInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+    });
+    
+    // Drag and drop
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('drag-over');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('drag-over');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+        handleFiles(e.dataTransfer.files);
+    });
+    
+    // Clear button
+    clearBtn.addEventListener('click', () => {
+        selectedFiles = [];
+        displayFiles();
+        uploadBtn.disabled = true;
+        fileInput.value = '';
+    });
+    
+    // Upload button
+    uploadBtn.addEventListener('click', () => {
+        uploadFiles(dataType, selectedFiles);
+    });
+    
+    function handleFiles(files) {
+        selectedFiles = Array.from(files);
+        displayFiles();
+        uploadBtn.disabled = selectedFiles.length === 0;
+    }
+    
+    function displayFiles() {
+        fileList.innerHTML = '';
+        
+        selectedFiles.forEach((file, index) => {
+            const item = document.createElement('div');
+            item.className = 'file-item';
+            item.innerHTML = `
+                <span><i class="fas fa-file"></i> ${file.name} (${formatFileSize(file.size)})</span>
+                <button onclick="removeFile(this, ${index})"><i class="fas fa-times"></i></button>
+            `;
+            fileList.appendChild(item);
+        });
+    }
+}
+
+function removeFile(btn, index) {
+    const box = btn.closest('.upload-box');
+    const fileInput = box.querySelector('.file-input');
+    const uploadBtn = box.querySelector('.upload-btn');
+    
+    // Remove file from array
+    const files = Array.from(fileInput.files);
+    files.splice(index, 1);
+    
+    // Update display
+    setupUploadArea(box);
+}
+
+async function uploadFiles(type, files) {
+    const uploadBtn = event.target;
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 업로드 중...';
+    
+    let endpoint = '';
+    switch(type) {
+        case 'product':
+            endpoint = '/api/upload';
+            break;
+        case 'review':
+            endpoint = '/api/review-upload';
+            break;
+        case 'promotion':
+            endpoint = '/api/promotion-upload';
+            break;
+        case 'coupon':
+            endpoint = '/api/coupon-upload';
+            break;
+    }
+    
+    let successCount = 0;
+    let errorCount = 0;
+    
+    for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                successCount++;
+            } else {
+                errorCount++;
+                alert(`파일 업로드 실패 (${file.name}): ${result.error}`);
+            }
+        } catch (error) {
+            errorCount++;
+            alert(`파일 업로드 오류 (${file.name}): ${error.message}`);
+        }
+    }
+    
+    if (successCount > 0) {
+        alert(`${successCount}개 파일이 성공적으로 업로드되었습니다.`);
+        // Clear files
+        const box = uploadBtn.closest('.upload-box');
+        const clearBtn = box.querySelector('.clear-btn');
+        clearBtn.click();
+        // Reload status and product data
+        loadDataStatus();
+        if (type === 'product') {
+            loadProductData();
+        }
+    }
+    
+    uploadBtn.disabled = false;
+    uploadBtn.innerHTML = '<i class="fas fa-upload"></i> 업로드';
+}
+
+async function loadDataStatus() {
+    try {
+        // Product data
+        const statsResponse = await fetch('/api/statistics');
+        const stats = await statsResponse.json();
+        document.getElementById('product-count').textContent = `${stats.total_products || 0}개`;
+        document.getElementById('product-update').textContent = stats.last_update || '-';
+        
+        // Review data
+        const reviewResponse = await fetch('/api/reviews');
+        const reviews = await reviewResponse.json();
+        document.getElementById('review-count').textContent = `${reviews.length || 0}개`;
+        
+        // Promotion data
+        const promotionResponse = await fetch('/api/promotions');
+        const promotions = await promotionResponse.json();
+        document.getElementById('promotion-count').textContent = `${promotions.length || 0}개`;
+        
+        // Coupon data
+        const couponResponse = await fetch('/api/coupons');
+        const coupons = await couponResponse.json();
+        document.getElementById('coupon-count').textContent = `${coupons.length || 0}개`;
+        
+    } catch (error) {
+        console.error('Error loading data status:', error);
+    }
+}
+
+async function reloadAllData(event) {
+    const btn = event.target.closest('button');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 새로고침 중...';
+    
+    try {
+        const response = await fetch('/api/reload', {
+            method: 'POST'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('데이터가 새로고침되었습니다.');
+            loadDataStatus();
+        }
+    } catch (error) {
+        alert('데이터 새로고침 중 오류가 발생했습니다.');
+    }
+    
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-sync"></i> 데이터 새로고침';
+}
+
+function downloadTemplate() {
+    alert('템플릿 다운로드 기능은 준비 중입니다.');
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Product Data Table Functions
+let productData = [];
+let filteredProductData = [];
+let sortDirection = {};
+let totalItems = 0;
+
+async function loadProductData() {
+    try {
+        const [dataResponse, statsResponse] = await Promise.all([
+            fetch('/api/data'),
+            fetch('/api/statistics')
+        ]);
+        
+        const data = await dataResponse.json();
+        const stats = await statsResponse.json();
+        
+        // Check if response has expected structure
+        if (!data || !Array.isArray(data)) {
+            console.error('Invalid response structure:', data);
+            productData = [];
+            totalItems = 0;
+        } else {
+            productData = data;
+            totalItems = data.length;
+        }
+        
+        filteredProductData = [...productData];
+        
+        // Update last update time
+        document.getElementById('dataLastUpdate').textContent = stats.last_update || '-';
+        
+        // Populate category filter
+        const categories = [...new Set(productData
+            .map(item => item.product_category)
+            .filter(cat => cat) // Remove empty/null values
+        )].sort();
+        
+        const categorySelect = document.getElementById('productCategoryFilter');
+        if (categorySelect) {
+            categorySelect.innerHTML = '<option value="">모든 카테고리</option>';
+            categories.forEach(cat => {
+                categorySelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+            });
+        }
+        
+        // Populate competitor filter
+        const competitors = [...new Set(productData
+            .map(item => item.Competitor)
+            .filter(comp => comp) // Remove empty/null values
+        )].sort();
+        
+        const filterSelect = document.getElementById('productCompetitorFilter');
+        if (filterSelect) {
+            filterSelect.innerHTML = '<option value="">모든 경쟁사</option>';
+            competitors.forEach(comp => {
+                filterSelect.innerHTML += `<option value="${comp}">${comp}</option>`;
+            });
+        }
+        
+        renderProductTable();
+    } catch (error) {
+        console.error('Error loading product data:', error);
+        // Don't show alert on page load, only log the error
+        // alert('데이터를 불러오는 중 오류가 발생했습니다.');
+    }
+}
+
+function setupProductDataControls() {
+    const searchInput = document.getElementById('productSearchInput');
+    const competitorFilter = document.getElementById('productCompetitorFilter');
+    const categoryFilter = document.getElementById('productCategoryFilter');
+    
+    searchInput.addEventListener('input', filterProductData);
+    competitorFilter.addEventListener('change', filterProductData);
+    categoryFilter.addEventListener('change', filterProductData);
+}
+
+function filterProductData() {
+    const searchTerm = document.getElementById('productSearchInput').value.toLowerCase();
+    const selectedCompetitor = document.getElementById('productCompetitorFilter').value;
+    const selectedCategory = document.getElementById('productCategoryFilter').value;
+    
+    filteredProductData = productData.filter(item => {
+        const matchesSearch = !searchTerm || 
+            item.Competitor.toLowerCase().includes(searchTerm) ||
+            (item.Design && item.Design.toLowerCase().includes(searchTerm));
+        
+        const matchesCompetitor = !selectedCompetitor || item.Competitor === selectedCompetitor;
+        const matchesCategory = !selectedCategory || item.product_category === selectedCategory;
+        
+        return matchesSearch && matchesCompetitor && matchesCategory;
+    });
+    
+    renderProductTable();
+}
+
+function renderProductTable() {
+    const tableBody = document.getElementById('productTableBody');
+    
+    if (!tableBody) {
+        console.error('Table body element not found');
+        return;
+    }
+    
+    if (!filteredProductData || filteredProductData.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: #9ca3af;">검색 결과가 없습니다.</td></tr>';
+        return;
+    }
+    
+    try {
+        tableBody.innerHTML = filteredProductData.map(item => `
+            <tr>
+                <td>${item.product_category || '-'}</td>
+                <td>${item.Competitor || '-'}</td>
+                <td>${item.Design || '-'}</td>
+                <td>${item.Thickness_cm && !isNaN(item.Thickness_cm) ? item.Thickness_cm.toFixed(1) : '-'}</td>
+                <td>${item.Width_cm && !isNaN(item.Width_cm) ? item.Width_cm.toFixed(0) : '-'}</td>
+                <td>${item.Length_cm && !isNaN(item.Length_cm) ? item.Length_cm.toFixed(0) : '-'}</td>
+                <td>${item.Price && !isNaN(item.Price) ? '₩' + item.Price.toLocaleString() : '-'}</td>
+                <td>${item.Price_per_Volume && !isNaN(item.Price_per_Volume) ? '₩' + item.Price_per_Volume.toFixed(2) : '-'}</td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Error rendering table:', error);
+        tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: #ef4444;">테이블 렌더링 중 오류가 발생했습니다.</td></tr>';
+    }
+}
+
+function sortProductTable(column) {
+    const currentDirection = sortDirection[column] || 'asc';
+    const newDirection = currentDirection === 'asc' ? 'desc' : 'asc';
+    sortDirection[column] = newDirection;
+    
+    // Reset all sort indicators
+    document.querySelectorAll('#productDataTable th i').forEach(icon => {
+        icon.className = 'fas fa-sort';
+    });
+    
+    // Set current sort indicator
+    const headerIcon = document.querySelector(`th[onclick="sortProductTable('${column}')"] i`);
+    headerIcon.className = `fas fa-sort-${newDirection === 'asc' ? 'up' : 'down'}`;
+    
+    filteredProductData.sort((a, b) => {
+        let aVal = a[column];
+        let bVal = b[column];
+        
+        // Handle null/undefined values
+        if (aVal == null) aVal = '';
+        if (bVal == null) bVal = '';
+        
+        // Convert to numbers if possible
+        if (!isNaN(aVal) && !isNaN(bVal)) {
+            aVal = parseFloat(aVal);
+            bVal = parseFloat(bVal);
+        }
+        
+        if (newDirection === 'asc') {
+            return aVal > bVal ? 1 : -1;
+        } else {
+            return aVal < bVal ? 1 : -1;
+        }
+    });
+    
+    renderProductTable();
+}
+
+async function refreshProductData(event) {
+    const btn = event.target.closest('button');
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 새로고침 중...';
+    btn.disabled = true;
+    
+    try {
+        // Call reload API to update timestamp
+        const reloadResponse = await fetch('/api/reload', { method: 'POST' });
+        const reloadResult = await reloadResponse.json();
+        
+        if (reloadResult.success) {
+            // Reload product data
+            await loadProductData();
+            
+            // Show success message briefly
+            btn.innerHTML = '<i class="fas fa-check"></i> 완료';
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }, 1000);
+        } else {
+            throw new Error('Reload failed');
+        }
+    } catch (error) {
+        console.error('Error refreshing data:', error);
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+        alert('데이터 새로고침 중 오류가 발생했습니다.');
+    }
+}
+
+
+async function exportProductData() {
+    try {
+        // Get all data for export
+        const response = await fetch('/api/data');
+        const allData = await response.json();
+        
+        if (allData.length === 0) {
+            alert('내보낼 데이터가 없습니다.');
+            return;
+        }
+        
+        const headers = ['카테고리', '경쟁사', '디자인', '두께(cm)', '너비(cm)', '길이(cm)', '가격', '가격/부피'];
+        const csvContent = [
+            headers.join(','),
+            ...allData.map(item => [
+                item.product_category || '',
+                item.Competitor || '',
+                item.Design || '',
+                item.Thickness_cm || '',
+                item.Width_cm || '',
+                item.Length_cm || '',
+                item.Price || '',
+                item.Price_per_Volume || ''
+            ].join(','))
+        ].join('\n');
+        
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `product_data_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        console.error('Error exporting data:', error);
+        alert('데이터 내보내기 중 오류가 발생했습니다.');
+    }
+}
+
+// Load macro files from the file system
+async function loadMacros() {
+    try {
+        // Get list of available macro files
+        const listResponse = await fetch('/api/macros');
+        const macroFiles = await listResponse.json();
+        
+        const containerList = document.getElementById('macro-container-list');
+        
+        if (!listResponse.ok || !macroFiles.length) {
+            containerList.innerHTML = '<div class="no-macros"><p>사용 가능한 크롤링 도구가 없습니다.</p></div>';
+            return;
+        }
+        
+        // Create containers for each macro file
+        for (const macro of macroFiles) {
+            const macroContainer = document.createElement('div');
+            macroContainer.className = 'macro-container';
+            macroContainer.innerHTML = `
+                <div class="macro-header" onclick="toggleMacro('${macro.id}')">
+                    <div class="macro-title">
+                        <h3>${macro.display_name}</h3>
+                        <i class="fas fa-chevron-down expand-icon" id="icon-${macro.id}"></i>
+                    </div>
+                    <button class="copy-btn" onclick="event.stopPropagation(); copyMacro('${macro.id}', event)">
+                        <i class="fas fa-copy"></i> 복사
+                    </button>
+                </div>
+                <div class="macro-preview" id="preview-${macro.id}" data-label="미리보기">
+                    <pre class="macro-code-preview">로딩 중...</pre>
+                </div>
+                <div class="macro-content collapsed" id="content-${macro.id}" data-label="전체 코드">
+                    <pre id="${macro.id}" class="macro-code">로딩 중...</pre>
+                </div>
+            `;
+            containerList.appendChild(macroContainer);
+            
+            // Load macro content
+            try {
+                const response = await fetch(`/api/macro/${macro.filename}`);
+                const macroContent = await response.text();
+                
+                if (response.ok) {
+                    // Set full content
+                    document.getElementById(macro.id).textContent = macroContent;
+                    
+                    // Set preview (first 4 lines)
+                    const lines = macroContent.split('\n');
+                    const preview = lines.slice(0, 4).join('\n');
+                    const previewElement = document.querySelector(`#preview-${macro.id} .macro-code-preview`);
+                    previewElement.textContent = preview;
+                } else {
+                    const errorMsg = `// 매크로 로딩 실패: ${macro.filename}`;
+                    document.getElementById(macro.id).textContent = errorMsg;
+                    document.querySelector(`#preview-${macro.id} .macro-code-preview`).textContent = errorMsg;
+                }
+            } catch (error) {
+                console.error(`Error loading macro ${macro.filename}:`, error);
+                const errorMsg = `// 매크로 로딩 오류: ${error.message}`;
+                document.getElementById(macro.id).textContent = errorMsg;
+                document.querySelector(`#preview-${macro.id} .macro-code-preview`).textContent = errorMsg;
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error loading macro list:', error);
+        document.getElementById('macro-container-list').innerHTML = 
+            '<div class="error-message"><p>크롤링 도구 목록을 불러오는데 실패했습니다.</p></div>';
+    }
+}
+
+// Toggle macro accordion
+function toggleMacro(macroId) {
+    const content = document.getElementById(`content-${macroId}`);
+    const preview = document.getElementById(`preview-${macroId}`);
+    const icon = document.getElementById(`icon-${macroId}`);
+    
+    if (content.classList.contains('collapsed')) {
+        // Expand
+        const scrollHeight = content.scrollHeight;
+        content.style.maxHeight = scrollHeight + 'px';
+        content.classList.remove('collapsed');
+        preview.style.display = 'none';
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+        
+        // Remove max-height after animation
+        setTimeout(() => {
+            content.style.maxHeight = 'none';
+        }, 300);
+    } else {
+        // Set current height before collapsing
+        content.style.maxHeight = content.scrollHeight + 'px';
+        
+        // Force reflow
+        content.offsetHeight;
+        
+        // Collapse
+        content.style.maxHeight = '0';
+        content.classList.add('collapsed');
+        preview.style.display = 'block';
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+    }
+}
+
+// Copy macro to clipboard
+function copyMacro(macroId, event) {
+    const macroElement = document.getElementById(macroId);
+    const macroText = macroElement.textContent;
+    
+    // Create temporary textarea
+    const textarea = document.createElement('textarea');
+    textarea.value = macroText;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+    
+    // Select and copy
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    
+    // Update button text
+    const button = event.target.closest('.copy-btn');
+    const originalHTML = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-check"></i> 복사됨';
+    button.classList.add('copied');
+    
+    // Reset after 2 seconds
+    setTimeout(() => {
+        button.innerHTML = originalHTML;
+        button.classList.remove('copied');
+    }, 2000);
+}
+
+// Live Calendar Data Functions
+let liveCalendarData = [];
+let filteredLiveData = [];
+let liveSortDirection = {};
+
+async function loadLiveCalendarData() {
+    try {
+        const [dataResponse, statsResponse] = await Promise.all([
+            fetch('/api/promotions'),
+            fetch('/api/statistics')
+        ]);
+        
+        const data = await dataResponse.json();
+        const stats = await statsResponse.json();
+        
+        liveCalendarData = data || [];
+        filteredLiveData = [...liveCalendarData];
+        
+        // Update last update time
+        document.getElementById('liveLastUpdate').textContent = stats.last_update || '-';
+        
+        // Populate competitor filter
+        const competitors = [...new Set(liveCalendarData
+            .map(item => item.competitor)
+            .filter(comp => comp)
+        )].sort();
+        
+        const filterSelect = document.getElementById('liveCompetitorFilter');
+        if (filterSelect) {
+            filterSelect.innerHTML = '<option value="">모든 브랜드</option>';
+            competitors.forEach(comp => {
+                filterSelect.innerHTML += `<option value="${comp}">${comp}</option>`;
+            });
+        }
+        
+        renderLiveTable();
+    } catch (error) {
+        console.error('Error loading live calendar data:', error);
+    }
+}
+
+function setupLiveCalendarControls() {
+    const searchInput = document.getElementById('liveSearchInput');
+    const competitorFilter = document.getElementById('liveCompetitorFilter');
+    
+    searchInput.addEventListener('input', filterLiveData);
+    competitorFilter.addEventListener('change', filterLiveData);
+}
+
+function filterLiveData() {
+    const searchTerm = document.getElementById('liveSearchInput').value.toLowerCase();
+    const selectedCompetitor = document.getElementById('liveCompetitorFilter').value;
+    
+    filteredLiveData = liveCalendarData.filter(item => {
+        const matchesSearch = !searchTerm || 
+            item.title.toLowerCase().includes(searchTerm) ||
+            item.competitor.toLowerCase().includes(searchTerm) ||
+            (item.description && item.description.toLowerCase().includes(searchTerm));
+        
+        const matchesCompetitor = !selectedCompetitor || item.competitor === selectedCompetitor;
+        
+        return matchesSearch && matchesCompetitor;
+    });
+    
+    renderLiveTable();
+}
+
+function renderLiveTable() {
+    const tbody = document.getElementById('liveTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    if (filteredLiveData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">데이터가 없습니다</td></tr>';
+        return;
+    }
+    
+    filteredLiveData.forEach(item => {
+        const row = tbody.insertRow();
+        row.innerHTML = `
+            <td>${item.date || '-'}</td>
+            <td>${item.time || '-'}</td>
+            <td>${item.competitor || '-'}</td>
+            <td>${item.title || '-'}</td>
+            <td>${item.description || '-'}</td>
+        `;
+    });
+}
+
+function sortLiveTable(column) {
+    const direction = liveSortDirection[column] === 'asc' ? 'desc' : 'asc';
+    liveSortDirection[column] = direction;
+    
+    filteredLiveData.sort((a, b) => {
+        let aVal = a[column] || '';
+        let bVal = b[column] || '';
+        
+        // Handle date and time sorting
+        if (column === 'date') {
+            aVal = new Date(aVal);
+            bVal = new Date(bVal);
+        }
+        
+        if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+    
+    renderLiveTable();
+}
+
+async function refreshLiveData(event) {
+    const refreshBtn = event.target.closest('.btn-refresh');
+    refreshBtn.classList.add('loading');
+    
+    try {
+        await loadLiveCalendarData();
+        
+        // Show success message briefly
+        const originalText = refreshBtn.innerHTML;
+        refreshBtn.innerHTML = '<i class="fas fa-check"></i> 완료!';
+        refreshBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+        
+        setTimeout(() => {
+            refreshBtn.innerHTML = originalText;
+            refreshBtn.style.background = '';
+            refreshBtn.classList.remove('loading');
+        }, 1500);
+    } catch (error) {
+        console.error('Error refreshing live data:', error);
+        alert('데이터 새로고침 중 오류가 발생했습니다.');
+        refreshBtn.classList.remove('loading');
+    }
+}
+
+async function exportLiveData() {
+    try {
+        if (liveCalendarData.length === 0) {
+            alert('내보낼 데이터가 없습니다.');
+            return;
+        }
+        
+        const headers = ['날짜', '시간', '브랜드', '라이브 제목', '설명'];
+        const csvContent = [
+            headers.join(','),
+            ...liveCalendarData.map(item => [
+                item.date || '',
+                item.time || '',
+                item.competitor || '',
+                `"${(item.title || '').replace(/"/g, '""')}"`,
+                `"${(item.description || '').replace(/"/g, '""')}"`
+            ].join(','))
+        ].join('\n');
+        
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `live_calendar_data_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        console.error('Error exporting live data:', error);
+        alert('데이터 내보내기 중 오류가 발생했습니다.');
+    }
+}
+
+// Simple mobile sidebar toggle
+function toggleMobileSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    if (sidebar && overlay) {
+        sidebar.classList.toggle('active');
+        overlay.classList.toggle('active');
+    }
+}
+
+// Ensure mobile menu is visible on mobile
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.innerWidth <= 768) {
+        const toggleBtn = document.querySelector('.mobile-menu-toggle');
+        if (toggleBtn) {
+            toggleBtn.style.display = 'block';
+        }
+    }
+});
+</script>
+{% endblock %}

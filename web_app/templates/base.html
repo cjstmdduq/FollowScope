@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FollowScope - 경쟁 제품 분석</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="alternate icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-improvements.css') }}">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <img src="{{ url_for('static', filename='favicon.svg') }}" alt="FollowScope 로고" class="nav-brand-logo" width="32" height="32">
+                <h1>FollowScope</h1>
+                <span class="nav-label">대시보드</span>
+            </div>
+            <div class="nav-stats" id="navStats">
+                <span><i class="fas fa-box"></i> <span id="totalProducts">-</span> 제품</span>
+                <span><i class="fas fa-building"></i> <span id="totalCompetitors">-</span> 경쟁사</span>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 FollowScope. All rights reserved.</p>
+            <p class="developer-info">개발자: 천승엽 (with Claude Opus4)</p>
+        </div>
+    </footer>
+
+
+
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/pet-ranges.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/mobile.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/quicklinks.js') }}"></script>
+
+    <!-- Page specific scripts will be loaded by templates -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>

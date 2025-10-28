@@ -1,0 +1,73 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+*.log
+.server_pid
+
+# Data is managed outside Git (Option C)
+# Ignore all CSV/JSON in FollowScope/data
+FollowScope/data/**/*.csv
+FollowScope/data/**/*.json
+FollowScope/data/processed/*.csv
+
+# Dynamic data files
+# 백업 및 업로드 이미지는 Git 관리 제외
+FollowScope/data/feeds/feeds.json.backup
+FollowScope/data/feeds/images/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local environment
+.env
+.env.local

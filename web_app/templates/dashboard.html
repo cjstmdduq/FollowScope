@@ -1,0 +1,729 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" onclick="toggleMobileSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Mobile Quick Links Toggle -->
+    <button class="mobile-quicklinks-toggle" onclick="toggleMobileQuicklinks()">
+        <i class="fas fa-link"></i>
+    </button>
+    
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+    
+    <!-- Quicklinks Overlay -->
+    <div class="quicklinks-overlay" onclick="toggleMobileQuicklinks()"></div>
+    
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">경쟁사 동향</h3>
+            <ul class="sidebar-menu">
+                <li>
+                    <button class="sidebar-btn active" onclick="showTab('feed')">
+                        <i class="fas fa-stream"></i>
+                        <span>Feed</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">제품 비교</h3>
+            <ul class="sidebar-menu">
+                <li>
+                    <button class="sidebar-btn" onclick="showTab('heatmap')">
+                        <i class="fas fa-th"></i>
+                        <span>가격 히트맵</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">프로모션/이벤트</h3>
+            <ul class="sidebar-menu">
+                <li>
+                    <button class="sidebar-btn" onclick="showTab('calendar')">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>라이브캘린더</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">리뷰 분석</h3>
+            <ul class="sidebar-menu">
+                <li>
+                    <button class="sidebar-btn" onclick="showTab('review-trends')">
+                        <i class="fas fa-chart-line"></i>
+                        <span>리뷰 추이 분석</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">도구</h3>
+            <ul class="sidebar-menu">
+                <li>
+                    <button class="sidebar-btn" onclick="showTab('macros')">
+                        <i class="fas fa-code"></i>
+                        <span>크롤링 도구</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        
+    </div>
+
+    <!-- Quick Links Sidebar -->
+    <div id="quickLinksPanel" class="sidebar quick-links-sidebar">
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">퀵링크</h3>
+            <div id="quickLinksCategories">
+                <!-- Categories will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Tab Contents -->
+        <div class="tab-content">
+        <!-- Heatmap Tab -->
+        <div id="heatmap" class="tab-pane">
+            <div class="section-header">
+                <h2>가격 히트맵</h2>
+                <p>두께와 너비에 따른 가격 분포를 확인하세요</p>
+                
+                <!-- Product Type Filter -->
+                <div class="filter-item">
+                    <label for="heatmapProductTypeSelect">제품 타입:</label>
+                    <select id="heatmapProductTypeSelect" class="form-select" onchange="updateHeatmap()">
+                        <option value="roll" selected>롤매트</option>
+                        <option value="puzzle">퍼즐매트</option>
+                        <option value="pet">애견롤매트</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="heatmapContainer" class="heatmap-container">
+                <!-- Heatmap will be generated here -->
+            </div>
+        </div>
+
+        
+        <!-- Live Calendar Tab -->
+        <div id="calendar" class="tab-pane">
+            <div class="section-header">
+                <h2>라이브캘린더</h2>
+                <p>경쟁사별 라이브방송 및 프로모션 일정을 확인하세요</p>
+            </div>
+            
+            <!-- 업로드 섹션 제거 -->
+            
+            <!-- Calendar View -->
+            <div class="calendar-container">
+                <div class="calendar-header">
+                    <button onclick="changeMonth(-1)" class="btn-secondary">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <h3 id="currentMonth">2025년 7월</h3>
+                    <button onclick="changeMonth(1)" class="btn-secondary">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                
+                <div id="calendarGrid" class="calendar-grid">
+                    <!-- Calendar will be generated here -->
+                </div>
+                
+                <!-- Live Pattern Analysis -->
+                <div class="live-pattern-section">
+                    <h3>라이브 패턴 분석</h3>
+                    <div id="patternAnalysis" class="pattern-analysis-grid">
+                        <!-- Pattern analysis will be generated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Crawling Tools Tab -->
+        <div id="macros" class="tab-pane">
+            <div class="section-header">
+                <h2>크롤링 도구</h2>
+                <p>자주 사용하는 크롤링/매크로 스크립트 목록입니다</p>
+            </div>
+            <div id="macroList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px;"></div>
+        </div>
+
+        <!-- Feed Tab -->
+        <div id="feed" class="tab-pane active">
+            <style>
+    /* Feed-specific styles (inlined from feed.html) */
+    .feed-container { max-width: 800px; margin: 0 auto; padding: 20px; }
+    .feed-composer { background: white; border-radius: 12px; padding: 20px; margin-bottom: 30px; border: 1px solid #e5e7eb; }
+    .composer-header { display: flex; align-items: center; margin-bottom: 15px; }
+    .composer-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #6366f1 0%, #3b82f6 50%, #0ea5e9 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; margin-right: 12px; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3); }
+    .composer-textarea { width: 100%; min-height: 100px; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; resize: vertical; font-size: 14px; margin-bottom: 15px; }
+    .composer-footer { display: flex; justify-content: space-between; align-items: center; }
+    .composer-actions { display: flex; gap: 15px; }
+    .action-btn { background: none; border: none; color: #666; cursor: pointer; font-size: 20px; padding: 8px; border-radius: 4px; transition: all 0.3s; }
+    .action-btn:hover { background: #f0f0f0; color: var(--primary-color); }
+    .post-btn { background: var(--primary-color); color: white; border: none; padding: 8px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+    .post-btn:hover { background: var(--primary-hover); }
+    .post-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .feed-posts { display: flex; flex-direction: column; gap: 20px; }
+    .feed-post { background: white; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; }
+    .post-header { padding: 16px; display: flex; align-items: center; justify-content: space-between; }
+    .post-author { display: flex; align-items: center; gap: 12px; }
+    .post-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #6366f1 0%, #3b82f6 50%, #0ea5e9 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3); }
+    .post-meta { display: flex; flex-direction: column; }
+    .absolute-time { opacity: 0.7; font-size: 0.85em; margin-top: 2px; }
+    .post-content { padding: 16px; }
+    .post-text { white-space: pre-wrap; word-wrap: break-word; line-height: 1.6; }
+    .post-images { width: 100%; background: #000; position: relative; overflow: hidden; }
+    .post-image { width: 100%; display: block; cursor: pointer; transition: transform 0.2s; }
+    .post-image:hover { transform: scale(1.05); }
+    .image-modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); }
+    .image-modal-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); max-width: 90%; max-height: 90%; }
+    .image-modal-close { position: absolute; top: 10px; right: 25px; color: white; font-size: 35px; font-weight: bold; cursor: pointer; }
+    .post-actions { display: flex; gap: 10px; padding: 0 16px 16px; }
+    .image-upload-area { display: none; gap: 8px; align-items: center; padding: 12px; border: 1px dashed #d1d5db; border-radius: 8px; color: #6b7280; cursor: pointer; margin-bottom: 10px; }
+    .image-upload-area.active { display: flex; }
+    .image-preview { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+    .image-preview-item { position: relative; }
+    .image-preview-item img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; }
+    .remove-image { position: absolute; top: -6px; right: -6px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; }
+    .empty-state { text-align: center; color: #6b7280; padding: 40px 0; }
+    .loading-spinner { text-align: center; color: #6b7280; padding: 12px 0; }
+    @media (max-width: 600px) { .composer-actions { justify-content: center; } }
+            </style>
+
+            <div class="feed-container">
+                <div class="feed-composer">
+                    <div class="composer-header">
+                        <div class="composer-avatar"><i class="fas fa-user"></i></div>
+                        <h3>경쟁사 동향 기록</h3>
+                    </div>
+                    <textarea class="composer-textarea" id="feedContent" placeholder="어떤 경쟁사 동향을 발견하셨나요?"></textarea>
+                    <div class="image-upload-area" id="imageUploadArea">
+                        <i class="fas fa-image"></i>
+                        <p>이미지를 드래그하거나 클릭하여 업로드</p>
+                        <input type="file" id="imageInput" accept="image/*" multiple style="display: none;">
+                    </div>
+                    <div class="image-preview" id="imagePreview"></div>
+                    <div class="composer-footer">
+                        <div class="composer-actions">
+                            <button class="action-btn" onclick="toggleImageUpload()" title="이미지 추가">
+                                <i class="fas fa-image"></i>
+                            </button>
+                            <button class="action-btn" onclick="cleanupOrphanedImages()" title="사용하지 않는 이미지 정리">
+                                <i class="fas fa-trash-can"></i>
+                            </button>
+                            <input type="text" class="tag-input" id="tagInput" placeholder="태그 입력 (쉼표로 구분)">
+                        </div>
+                        <button class="post-btn" id="postBtn" onclick="createPost()">게시</button>
+                    </div>
+                </div>
+                <div class="feed-posts" id="feedPosts">
+                    <div class="loading-spinner">
+                        <i class="fas fa-spinner fa-spin"></i> 로딩 중...
+                    </div>
+                </div>
+                <div id="loadMoreTrigger" style="height: 100px;"></div>
+            </div>
+        </div>
+
+        <!-- Image Modal -->
+        <div id="imageModal" class="image-modal" onclick="closeImageModal()">
+            <span class="image-modal-close">&times;</span>
+            <img class="image-modal-content" id="modalImage">
+        </div>
+        
+        <!-- (쿠폰 현황 탭 제거) -->
+        
+        <!-- Review Trends Tab -->
+        <div id="review-trends" class="tab-pane">
+            <div class="section-header">
+                <h2>리뷰 추이 분석</h2>
+                <p>경쟁사별 리뷰 수, 평점 변화 추이를 분석합니다</p>
+                
+                <!-- Product Type Filter -->
+                <div class="filter-item">
+                    <label for="reviewProductTypeSelect">제품 타입:</label>
+                    <select id="reviewProductTypeSelect" class="form-select" onchange="updateReviewCharts()">
+                        <option value="roll" selected>롤매트</option>
+                        <option value="puzzle">퍼즐매트</option>
+                        <option value="pet">애견롤매트</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- 리뷰 업로드 섹션 제거 -->
+            
+            <!-- Review Analysis Controls -->
+            <div class="review-controls">
+                <div class="review-controls-row">
+                    <div class="date-range-selector">
+                        <label>기간 선택:</label>
+                        <select id="reviewPeriod" onchange="toggleCustomDateRange()">
+                            <option value="7">최근 7일</option>
+                            <option value="14">최근 14일</option>
+                            <option value="30" selected>최근 30일</option>
+                            <option value="90">최근 90일</option>
+                            <option value="180">최근 6개월</option>
+                            <option value="365">최근 1년</option>
+                            <option value="all">전체기간</option>
+                            <option value="custom">특정 기간</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Custom Date Range Selector -->
+                    <div class="custom-date-range" id="customDateRange" style="display: none;">
+                        <label>시작 날짜:</label>
+                        <input type="date" id="startDate">
+                        <label>종료 날짜:</label>
+                        <input type="date" id="endDate">
+                        <button type="button" class="apply-btn" onclick="applyCustomDateRange()">적용</button>
+                    </div>
+                </div>
+                
+                <div class="competitor-selector">
+                    <label>경쟁사 선택:</label>
+                    <div id="reviewCompetitorCheckboxes" class="competitor-checkboxes">
+                        <!-- 경쟁사 체크박스들이 여기에 동적으로 추가됩니다 -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Review Charts -->
+            <div class="review-charts-container">
+                <!-- Review Count Trend -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>리뷰 수 추이</h3>
+                        <button class="expand-btn" onclick="expandChart('reviewCount')" title="확대 보기">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3.5 3.5L1 1M1 1V4M1 1H4M12.5 3.5L15 1M15 1V4M15 1H12M3.5 12.5L1 15M1 15V12M1 15H4M12.5 12.5L15 15M15 15V12M15 15H12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="reviewCountChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Market Share Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>시장점유율 (리뷰 수 기준)</h3>
+                        <button class="expand-btn" onclick="expandChart('marketShare')" title="확대 보기">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3.5 3.5L1 1M1 1V4M1 1H4M12.5 3.5L15 1M15 1V4M15 1H12M3.5 12.5L1 15M1 15V12M1 15H4M12.5 12.5L15 15M15 15V12M15 15H12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="marketShareChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>데이터 로딩 중...</p>
+</div>
+
+<!-- Chart Modal -->
+<div id="chartModal" class="chart-modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeChartModal()">&times;</span>
+        <h2 id="modalTitle">차트 확대 보기</h2>
+        <div class="modal-chart-container">
+            <canvas id="modalChart"></canvas>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Simple macro list loader for the '크롤링 도구' 탭
+let macrosInitialized = false;
+async function initializeMacros() {
+    const container = document.getElementById('macroList');
+    if (!container) return;
+    if (macrosInitialized) return;
+    macrosInitialized = true;
+    container.innerHTML = '<p>로딩 중...</p>';
+
+    try {
+        const res = await fetch('/api/macros');
+        const macros = await res.json();
+
+        if (!macros || macros.length === 0) {
+            container.innerHTML = '<p>사용 가능한 크롤링 도구가 없습니다.</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        macros.forEach(m => {
+            const card = document.createElement('div');
+            card.style.border = '1px solid #e5e7eb';
+            card.style.borderRadius = '10px';
+            card.style.padding = '14px';
+            card.style.background = 'white';
+            card.innerHTML = `
+                <h4 style="margin: 0 0 8px 0; font-size: 16px;">${m.display_name || m.filename}</h4>
+                <p style="color:#6b7280; font-size: 12px; margin: 0 0 12px 0;">${m.filename}</p>
+                <div style="display:flex; gap:8px;">
+                    <a class="btn-secondary" href="/api/macro/${m.filename}" target="_blank" style="text-decoration:none; padding:6px 10px; border:1px solid #e5e7eb; border-radius:6px;">
+                        원본 보기
+                    </a>
+                    <button class="btn-primary" style="padding:6px 10px; border:none; border-radius:6px; background:#2563eb; color:white;" onclick="copyMacro('${m.filename}')">복사</button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    } catch (e) {
+        container.innerHTML = '<p>크롤링 도구 목록을 불러오는데 실패했습니다.</p>';
+    }
+}
+
+async function copyMacro(filename) {
+    try {
+        const res = await fetch(`/api/macro/${filename}`);
+        const text = await res.text();
+        await navigator.clipboard.writeText(text);
+        alert('클립보드에 복사되었습니다.');
+    } catch (e) {
+        alert('복사 실패. 원본 보기를 이용하세요.');
+    }
+}
+</script>
+
+<script>
+// Feed tab logic (extracted from feed.html)
+let feedInitialized = false;
+let currentPage = 1;
+let isLoading = false;
+let hasMore = true;
+let uploadedImages = [];
+
+function initializeFeed() {
+    if (feedInitialized) return;
+    feedInitialized = true;
+    loadFeeds();
+    setupInfiniteScroll();
+    setupImageUpload();
+    setupPasteHandler();
+}
+
+async function loadFeeds(append = false) {
+    if (isLoading || !hasMore) return;
+    isLoading = true;
+    try {
+        const response = await fetch(`/api/feeds?page=${currentPage}&per_page=10`);
+        const data = await response.json();
+        const container = document.getElementById('feedPosts');
+        if (!append) container.innerHTML = '';
+        if (data.feeds.length === 0 && currentPage === 1) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-stream"></i>
+                    <h3>아직 기록된 동향이 없습니다</h3>
+                    <p>첫 번째 경쟁사 동향을 기록해보세요!</p>
+                </div>
+            `;
+            isLoading = false;
+            return;
+        }
+        data.feeds.forEach(feed => { container.appendChild(createPostElement(feed)); });
+        hasMore = data.has_more;
+        currentPage++;
+    } catch (e) {
+        console.error('Error loading feeds:', e);
+    } finally {
+        isLoading = false;
+    }
+}
+
+function createPostElement(feed) {
+    const post = document.createElement('div');
+    post.className = 'feed-post';
+    const feedDate = new Date(feed.created_at);
+    const timeAgo = getTimeAgo(feedDate);
+    const absoluteTime = feedDate.toLocaleString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    });
+    post.innerHTML = `
+        <div class="post-header">
+            <div class="post-author">
+                <div class="post-avatar"><i class="fas fa-user"></i></div>
+                <div class="post-meta">
+                    <strong>${feed.author || 'FollowScope'}</strong>
+                    <small>${timeAgo}</small>
+                    <small class="absolute-time">${absoluteTime}</small>
+                </div>
+            </div>
+            <div class="post-actions">
+                <button class="action-btn" onclick="editPost('${feed.id}')" title="수정"><i class="fas fa-edit"></i></button>
+                <button class="action-btn" onclick="deletePost('${feed.id}')" title="삭제"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>
+        ${feed.images && feed.images.length > 0 ? `
+            <div class="post-images">
+                ${feed.images.map(img => `<img src="${img}" alt="Feed Image" class="post-image" onclick="openImageModal('${img}')">`).join('')}
+            </div>
+        ` : ''}
+
+        <div class="post-content" id="post-content-${feed.id}">
+            <div class="post-text">${feed.content}</div>
+        </div>
+    `;
+    return post;
+}
+
+async function createPost() {
+    const content = document.getElementById('feedContent').value.trim();
+    if (!content) { alert('내용을 입력해주세요.'); return; }
+    const postBtn = document.getElementById('postBtn');
+    postBtn.disabled = true; postBtn.textContent = '게시 중...';
+    try {
+        const tags = document.getElementById('tagInput').value.split(',').map(t => t.trim()).filter(Boolean);
+        const response = await fetch('/api/feeds', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content, tags, images: uploadedImages })
+        });
+        if (response.ok) {
+            document.getElementById('feedContent').value = '';
+            document.getElementById('tagInput').value = '';
+            document.getElementById('imagePreview').innerHTML = '';
+            document.getElementById('imageUploadArea').classList.remove('active');
+            uploadedImages = [];
+            currentPage = 1; hasMore = true; await loadFeeds();
+        } else { alert('게시 실패. 다시 시도해주세요.'); }
+    } catch (e) {
+        console.error('Error creating post:', e); alert('게시 실패. 다시 시도해주세요.');
+    } finally { postBtn.disabled = false; postBtn.textContent = '게시'; }
+}
+
+async function deletePost(feedId) {
+    if (!confirm('이 게시물을 삭제하시겠습니까?\n연관된 이미지도 함께 삭제됩니다.')) return;
+    try {
+        const response = await fetch(`/api/feeds/${feedId}`, { method: 'DELETE' });
+        if (response.ok) {
+            const result = await response.json();
+            if (result.deleted_images && result.deleted_images.length > 0) {
+                console.log(`Deleted ${result.deleted_images.length} image(s):`, result.deleted_images);
+            }
+            if (result.failed_images && result.failed_images.length > 0) {
+                console.warn(`Failed to delete ${result.failed_images.length} image(s):`, result.failed_images);
+            }
+            currentPage = 1;
+            hasMore = true;
+            await loadFeeds();
+        } else {
+            alert('삭제 실패. 다시 시도해주세요.');
+        }
+    } catch (e) {
+        console.error('Error deleting post:', e);
+        alert('삭제 실패. 다시 시도해주세요.');
+    }
+}
+
+function toggleImageUpload() {
+    const uploadArea = document.getElementById('imageUploadArea');
+    uploadArea.classList.toggle('active');
+}
+
+function setupImageUpload() {
+    const uploadArea = document.getElementById('imageUploadArea');
+    const imageInput = document.getElementById('imageInput');
+    if (!uploadArea || !imageInput) return;
+    uploadArea.addEventListener('click', () => imageInput.click());
+    uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+    uploadArea.addEventListener('drop', (e) => { e.preventDefault(); uploadArea.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
+    imageInput.addEventListener('change', (e) => handleFiles(e.target.files));
+}
+
+async function handleFiles(files) {
+    for (const file of files) {
+        if (!file.type.startsWith('image/')) continue;
+        const formData = new FormData(); formData.append('image', file);
+        try {
+            const response = await fetch('/api/upload-image', { method: 'POST', body: formData });
+            if (response.ok) { const data = await response.json(); uploadedImages.push(data.url); displayImagePreview(data.url); }
+        } catch (e) { console.error('Error uploading image:', e); }
+    }
+}
+
+function displayImagePreview(url) {
+    const preview = document.getElementById('imagePreview');
+    const item = document.createElement('div'); item.className = 'image-preview-item';
+    item.innerHTML = `<img src="${url}" alt="Preview"><button class="remove-image" onclick="removeImage('${url}', this)">×</button>`;
+    preview.appendChild(item);
+}
+
+function removeImage(url, button) {
+    uploadedImages = uploadedImages.filter(img => img !== url);
+    button.parentElement.remove();
+}
+
+function setupPasteHandler() {
+    document.addEventListener('paste', async (e) => {
+        const items = e.clipboardData.items;
+        for (const item of items) {
+            if (item.type.startsWith('image/')) {
+                e.preventDefault(); const file = item.getAsFile(); await handleFiles([file]);
+                const uploadArea = document.getElementById('imageUploadArea');
+                if (!uploadArea.classList.contains('active')) uploadArea.classList.add('active');
+            }
+        }
+    });
+}
+
+function setupInfiniteScroll() {
+    const sentinel = document.getElementById('loadMoreTrigger');
+    if (!sentinel) return;
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => { if (entry.isIntersecting && !isLoading && hasMore) loadFeeds(true); });
+    });
+    observer.observe(sentinel);
+}
+
+function getTimeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    if (seconds < 60) return '방금 전';
+    if (seconds < 3600) return Math.floor(seconds / 60) + '분 전';
+    if (seconds < 86400) return Math.floor(seconds / 3600) + '시간 전';
+    if (seconds < 604800) return Math.floor(seconds / 86400) + '일 전';
+    return date.toLocaleDateString();
+}
+
+function editPost(feedId) {
+    const postContent = document.getElementById(`post-content-${feedId}`);
+    if (!postContent) return;
+    const currentContent = postContent.querySelector('.post-text').textContent;
+    const editForm = document.createElement('div');
+    editForm.className = 'edit-form';
+    editForm.innerHTML = `
+        <textarea class="composer-textarea" id="edit-content-${feedId}">${currentContent}</textarea>
+        <div style="margin-top: 10px; display: flex; gap: 10px;">
+            <button class="post-btn" onclick="saveEdit('${feedId}')">저장</button>
+            <button class="action-btn" style="padding: 8px 16px;" onclick="cancelEdit('${feedId}')">취소</button>
+        </div>`;
+    postContent.innerHTML = ''; postContent.appendChild(editForm);
+    document.getElementById(`edit-content-${feedId}`).focus();
+}
+
+async function saveEdit(feedId) {
+    const newContent = document.getElementById(`edit-content-${feedId}`).value.trim();
+    if (!newContent) { alert('내용을 입력해주세요.'); return; }
+    try {
+        const response = await fetch(`/api/feeds/${feedId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: newContent }) });
+        if (response.ok) { currentPage = 1; hasMore = true; await loadFeeds(); } else { alert('수정 실패. 다시 시도해주세요.'); }
+    } catch (e) { console.error('Error updating post:', e); alert('수정 실패. 다시 시도해주세요.'); }
+}
+
+function cancelEdit() { currentPage = 1; hasMore = true; loadFeeds(); }
+
+// Image modal functions
+function openImageModal(imageSrc) {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    modal.style.display = 'block';
+    modalImg.src = imageSrc;
+}
+
+function closeImageModal() {
+    document.getElementById('imageModal').style.display = 'none';
+}
+
+// Image cleanup function
+async function cleanupOrphanedImages() {
+    if (!confirm('사용하지 않는 이미지를 모두 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return;
+
+    try {
+        const response = await fetch('/api/feeds/cleanup-images', { method: 'POST' });
+        const result = await response.json();
+
+        if (response.ok) {
+            alert(`정리 완료!\n삭제된 이미지: ${result.deleted_count}개\n확보된 공간: ${result.freed_space}`);
+            console.log('Cleanup result:', result);
+        } else {
+            alert('정리 실패: ' + result.error);
+        }
+    } catch (e) {
+        console.error('Error cleaning up images:', e);
+        alert('정리 실패. 다시 시도해주세요.');
+    }
+}
+</script>
+
+<script>
+// Fallback: ensure Feed and Macros initialize on first load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing...');
+    try {
+        // Force initialize Feed on page load
+        if (document.getElementById('feedPosts')) {
+            console.log('Feed container found, initializing...');
+            if (typeof initializeFeed === 'function') {
+                initializeFeed();
+                console.log('Feed initialized');
+            } else {
+                console.error('initializeFeed function not found');
+            }
+        }
+
+        // Force initialize Macros
+        if (document.getElementById('macroList')) {
+            console.log('Macro container found, initializing...');
+            if (typeof initializeMacros === 'function') {
+                initializeMacros();
+                console.log('Macros initialized');
+            } else {
+                console.error('initializeMacros function not found');
+            }
+        }
+
+        // Ensure Feed tab is visible and active
+        const feedTab = document.getElementById('feed');
+        if (feedTab) {
+            feedTab.classList.add('active');
+            console.log('Feed tab set to active');
+        }
+
+        // Force call showTab if available
+        if (typeof window.showTab === 'function') {
+            window.showTab('feed');
+            console.log('showTab(feed) called');
+        }
+
+    } catch (e) {
+        console.error('Init error:', e);
+    }
+});
+</script>
+{% endblock %}

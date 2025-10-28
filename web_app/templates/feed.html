@@ -1,0 +1,879 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" onclick="toggleMobileSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+    
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">경쟁사 동향</h3>
+            <ul class="sidebar-menu">
+                <li>
+                    <button class="sidebar-btn active" onclick="location.href='/'">
+                        <i class="fas fa-stream"></i>
+                        <span>Feed</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">제품 비교</h3>
+            <ul class="sidebar-menu">
+                <li>
+                    <button class="sidebar-btn" onclick="location.href='/'">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>대시보드</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        
+    </div>
+
+    <!-- Quick Links Sidebar -->
+    <div id="quickLinksPanel" class="sidebar quick-links-sidebar">
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">퀵링크</h3>
+            <div id="quickLinksCategories">
+                <!-- Categories will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="tab-content">
+            <div class="tab-pane active">
+                <style>
+    /* Feed-specific styles */
+    .feed-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .feed-composer {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 30px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .composer-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .composer-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1 0%, #3b82f6 50%, #0ea5e9 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 18px;
+        margin-right: 12px;
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    }
+
+    .composer-textarea {
+        width: 100%;
+        min-height: 100px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 12px;
+        resize: vertical;
+        font-size: 14px;
+        margin-bottom: 15px;
+    }
+
+    .composer-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .composer-actions {
+        display: flex;
+        gap: 15px;
+    }
+
+    .action-btn {
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        font-size: 20px;
+        padding: 8px;
+        border-radius: 4px;
+        transition: all 0.3s;
+    }
+
+    .action-btn:hover {
+        background: #f0f0f0;
+        color: var(--primary-color);
+    }
+
+    .post-btn {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 8px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .post-btn:hover {
+        background: var(--primary-hover);
+    }
+
+    .post-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Feed Posts */
+    .feed-posts {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .feed-post {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+    }
+
+    .post-header {
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .post-author {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .post-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1 0%, #3b82f6 50%, #0ea5e9 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 18px;
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    }
+
+    .post-meta {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .post-author-name {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .post-time {
+        font-size: 12px;
+        color: #999;
+    }
+
+    .post-options {
+        cursor: pointer;
+        padding: 4px;
+        color: #666;
+    }
+
+    .post-images {
+        width: 100%;
+        background: #000;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .post-images img {
+        width: 100%;
+        display: block;
+    }
+
+    .post-content {
+        padding: 16px;
+    }
+
+    .post-text {
+        color: #333;
+        line-height: 1.5;
+        margin-bottom: 12px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .post-tags {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+
+    .post-tag {
+        background: #f0f0f0;
+        color: #666;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 12px;
+    }
+
+    .post-feed-type {
+        color: var(--primary-color);
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    /* Image Upload Area */
+    .image-upload-area {
+        border: 2px dashed #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 15px;
+        display: none;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .image-upload-area.active {
+        display: block;
+    }
+
+    .image-upload-area.dragover {
+        border-color: var(--primary-color);
+        background: #f8f8f8;
+    }
+
+    .image-preview {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 15px;
+    }
+
+    .image-preview-item {
+        position: relative;
+        width: 100px;
+        height: 100px;
+    }
+
+    .image-preview-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+
+    .remove-image {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: #ff4444;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        cursor: pointer;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .feed-type-select {
+        padding: 8px 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 14px;
+        margin-right: 10px;
+    }
+
+    .tag-input {
+        padding: 8px 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 14px;
+        flex: 1;
+    }
+
+    .loading-spinner {
+        text-align: center;
+        padding: 40px;
+        color: #999;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+    }
+
+    .empty-state i {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .feed-container {
+            padding: 10px;
+        }
+
+        .feed-composer {
+            padding: 15px;
+        }
+
+        .composer-footer {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+        }
+
+        .composer-actions {
+            justify-content: center;
+        }
+    }
+</style>
+
+<div class="feed-container">
+    <!-- Feed Composer -->
+    <div class="feed-composer">
+        <div class="composer-header">
+            <div class="composer-avatar"><i class="fas fa-user"></i></div>
+            <h3>경쟁사 동향 기록</h3>
+        </div>
+        
+        <textarea class="composer-textarea" id="feedContent" placeholder="어떤 경쟁사 동향을 발견하셨나요?"></textarea>
+        
+        <div class="image-upload-area" id="imageUploadArea">
+            <i class="fas fa-image"></i>
+            <p>이미지를 드래그하거나 클릭하여 업로드</p>
+            <input type="file" id="imageInput" accept="image/*" multiple style="display: none;">
+        </div>
+        
+        <div class="image-preview" id="imagePreview"></div>
+        
+        <div class="composer-footer">
+            <div class="composer-actions">
+                <button class="action-btn" onclick="toggleImageUpload()" title="이미지 추가">
+                    <i class="fas fa-image"></i>
+                </button>
+                
+                <select class="feed-type-select" id="feedTypeSelect">
+                    <option value="general">일반 동향</option>
+                    <option value="price">가격 변동</option>
+                    <option value="product">신제품 출시</option>
+                    <option value="promotion">프로모션/이벤트</option>
+                    <option value="review">리뷰/고객반응</option>
+                    <option value="patch">패치노트</option>
+                    <option value="etc">기타</option>
+                </select>
+                
+                <input type="text" class="tag-input" id="tagInput" placeholder="태그 입력 (쉼표로 구분)">
+            </div>
+            
+            <button class="post-btn" id="postBtn" onclick="createPost()">게시</button>
+        </div>
+    </div>
+    
+    <!-- Feed Posts -->
+    <div class="feed-posts" id="feedPosts">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i> 로딩 중...
+        </div>
+    </div>
+    
+    <!-- Load More -->
+    <div id="loadMoreTrigger" style="height: 100px;"></div>
+</div>
+
+<script>
+let currentPage = 1;
+let isLoading = false;
+let hasMore = true;
+let uploadedImages = [];
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    loadFeeds();
+    setupInfiniteScroll();
+    setupImageUpload();
+    setupPasteHandler();
+});
+
+// Load competitors for dropdown - removed as per requirement
+
+// Load feeds
+async function loadFeeds(append = false) {
+    if (isLoading || !hasMore) return;
+    
+    isLoading = true;
+    
+    try {
+        const response = await fetch(`/api/feeds?page=${currentPage}&per_page=10`);
+        const data = await response.json();
+        
+        const container = document.getElementById('feedPosts');
+        
+        if (!append) {
+            container.innerHTML = '';
+        }
+        
+        if (data.feeds.length === 0 && currentPage === 1) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-stream"></i>
+                    <h3>아직 기록된 동향이 없습니다</h3>
+                    <p>첫 번째 경쟁사 동향을 기록해보세요!</p>
+                </div>
+            `;
+            return;
+        }
+        
+        data.feeds.forEach(feed => {
+            container.appendChild(createPostElement(feed));
+        });
+        
+        hasMore = data.has_more;
+        currentPage++;
+        isLoading = false;
+        
+    } catch (error) {
+        console.error('Error loading feeds:', error);
+        isLoading = false;
+    }
+}
+
+// Create post element
+function createPostElement(feed) {
+    const post = document.createElement('div');
+    post.className = 'feed-post';
+    
+    const timeAgo = getTimeAgo(new Date(feed.created_at));
+    
+    post.innerHTML = `
+        <div class="post-header">
+            <div class="post-author">
+                <div class="post-avatar"><i class="fas fa-user"></i></div>
+                <div class="post-meta">
+                    <div class="post-author-name">${feed.author}</div>
+                    <div class="post-time">${timeAgo}</div>
+                </div>
+            </div>
+            <div class="post-options">
+                <button class="action-btn" onclick="editPost('${feed.id}')" title="수정">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn" onclick="deletePost('${feed.id}')" title="삭제">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        
+        ${feed.images && feed.images.length > 0 ? `
+            <div class="post-images">
+                ${feed.images.map(img => `<img src="${img}" alt="Feed image">`).join('')}
+            </div>
+        ` : ''}
+        
+        <div class="post-content" id="post-content-${feed.id}">
+            <div class="post-text">${feed.content}</div>
+            
+            ${feed.feed_type ? `
+                <div class="post-feed-type">
+                    <i class="fas fa-tag"></i> ${getFeedTypeLabel(feed.feed_type)}
+                </div>
+            ` : ''}
+            
+            ${feed.tags && feed.tags.length > 0 ? `
+                <div class="post-tags">
+                    ${feed.tags.map(tag => `<span class="post-tag">#${tag}</span>`).join('')}
+                </div>
+            ` : ''}
+        </div>
+    `;
+    
+    return post;
+}
+
+// Create new post
+async function createPost() {
+    const content = document.getElementById('feedContent').value.trim();
+    if (!content) {
+        alert('내용을 입력해주세요.');
+        return;
+    }
+    
+    const postBtn = document.getElementById('postBtn');
+    postBtn.disabled = true;
+    postBtn.textContent = '게시 중...';
+    
+    try {
+        const tags = document.getElementById('tagInput').value
+            .split(',')
+            .map(t => t.trim())
+            .filter(t => t);
+        
+        const response = await fetch('/api/feeds', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                content: content,
+                feed_type: document.getElementById('feedTypeSelect').value,
+                tags: tags,
+                images: uploadedImages
+            })
+        });
+        
+        if (response.ok) {
+            // Reset form
+            document.getElementById('feedContent').value = '';
+            document.getElementById('feedTypeSelect').value = 'general';
+            document.getElementById('tagInput').value = '';
+            document.getElementById('imagePreview').innerHTML = '';
+            document.getElementById('imageUploadArea').classList.remove('active');
+            uploadedImages = [];
+            
+            // Reload feeds
+            currentPage = 1;
+            hasMore = true;
+            await loadFeeds();
+        } else {
+            alert('게시 실패. 다시 시도해주세요.');
+        }
+    } catch (error) {
+        console.error('Error creating post:', error);
+        alert('게시 실패. 다시 시도해주세요.');
+    } finally {
+        postBtn.disabled = false;
+        postBtn.textContent = '게시';
+    }
+}
+
+// Delete post
+async function deletePost(feedId) {
+    if (!confirm('이 게시물을 삭제하시겠습니까?')) return;
+    
+    try {
+        const response = await fetch(`/api/feeds/${feedId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            currentPage = 1;
+            hasMore = true;
+            await loadFeeds();
+        }
+    } catch (error) {
+        console.error('Error deleting post:', error);
+    }
+}
+
+// Toggle image upload
+function toggleImageUpload() {
+    const uploadArea = document.getElementById('imageUploadArea');
+    uploadArea.classList.toggle('active');
+}
+
+// Setup image upload
+function setupImageUpload() {
+    const uploadArea = document.getElementById('imageUploadArea');
+    const imageInput = document.getElementById('imageInput');
+    
+    uploadArea.addEventListener('click', () => {
+        imageInput.click();
+    });
+    
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+    });
+    
+    imageInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+    });
+}
+
+// Handle file upload
+async function handleFiles(files) {
+    for (const file of files) {
+        if (!file.type.startsWith('image/')) continue;
+        
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        try {
+            const response = await fetch('/api/upload-image', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                uploadedImages.push(data.url);
+                displayImagePreview(data.url);
+            }
+        } catch (error) {
+            console.error('Error uploading image:', error);
+        }
+    }
+}
+
+// Display image preview
+function displayImagePreview(url) {
+    const preview = document.getElementById('imagePreview');
+    const item = document.createElement('div');
+    item.className = 'image-preview-item';
+    
+    item.innerHTML = `
+        <img src="${url}" alt="Preview">
+        <button class="remove-image" onclick="removeImage('${url}', this)">×</button>
+    `;
+    
+    preview.appendChild(item);
+}
+
+// Remove image
+function removeImage(url, button) {
+    uploadedImages = uploadedImages.filter(img => img !== url);
+    button.parentElement.remove();
+}
+
+// Setup paste handler
+function setupPasteHandler() {
+    document.addEventListener('paste', async (e) => {
+        const items = e.clipboardData.items;
+        
+        for (const item of items) {
+            if (item.type.startsWith('image/')) {
+                e.preventDefault();
+                const file = item.getAsFile();
+                await handleFiles([file]);
+                
+                // Show upload area if hidden
+                const uploadArea = document.getElementById('imageUploadArea');
+                if (!uploadArea.classList.contains('active')) {
+                    uploadArea.classList.add('active');
+                }
+            }
+        }
+    });
+}
+
+// Setup infinite scroll
+function setupInfiniteScroll() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !isLoading && hasMore) {
+                loadFeeds(true);
+            }
+        });
+    });
+    
+    observer.observe(document.getElementById('loadMoreTrigger'));
+}
+
+// Get time ago
+function getTimeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    
+    if (seconds < 60) return '방금 전';
+    if (seconds < 3600) return Math.floor(seconds / 60) + '분 전';
+    if (seconds < 86400) return Math.floor(seconds / 3600) + '시간 전';
+    if (seconds < 604800) return Math.floor(seconds / 86400) + '일 전';
+    
+    return date.toLocaleDateString();
+}
+
+// Get feed type label
+function getFeedTypeLabel(type) {
+    const labels = {
+        'general': '일반 동향',
+        'price': '가격 변동',
+        'product': '신제품 출시',
+        'promotion': '프로모션/이벤트',
+        'review': '리뷰/고객반응',
+        'patch': '패치노트',
+        'etc': '기타'
+    };
+    return labels[type] || type;
+}
+
+// Store original feed data for editing
+let editingFeeds = {};
+
+// Edit post
+function editPost(feedId) {
+    // Find the feed data
+    const postElement = document.querySelector(`#post-content-${feedId}`);
+    const contentDiv = postElement.querySelector('.post-text');
+    const currentContent = contentDiv.textContent;
+    
+    // Get current feed type
+    const feedTypeDiv = postElement.querySelector('.post-feed-type');
+    let currentFeedType = 'general';
+    if (feedTypeDiv) {
+        const typeText = feedTypeDiv.textContent.trim();
+        // Reverse lookup feed type from label
+        for (const [key, value] of Object.entries(getFeedTypeLabels())) {
+            if (typeText.includes(value)) {
+                currentFeedType = key;
+                break;
+            }
+        }
+    }
+    
+    // Store original data
+    editingFeeds[feedId] = {
+        content: currentContent,
+        feedType: currentFeedType
+    };
+    
+    // Create edit form
+    const editForm = document.createElement('div');
+    editForm.className = 'edit-form';
+    editForm.innerHTML = `
+        <textarea class="composer-textarea" id="edit-content-${feedId}">${currentContent}</textarea>
+        <select class="feed-type-select" id="edit-type-${feedId}" style="margin-top: 10px;">
+            <option value="general" ${currentFeedType === 'general' ? 'selected' : ''}>일반 동향</option>
+            <option value="price" ${currentFeedType === 'price' ? 'selected' : ''}>가격 변동</option>
+            <option value="product" ${currentFeedType === 'product' ? 'selected' : ''}>신제품 출시</option>
+            <option value="promotion" ${currentFeedType === 'promotion' ? 'selected' : ''}>프로모션/이벤트</option>
+            <option value="review" ${currentFeedType === 'review' ? 'selected' : ''}>리뷰/고객반응</option>
+            <option value="patch" ${currentFeedType === 'patch' ? 'selected' : ''}>패치노트</option>
+            <option value="etc" ${currentFeedType === 'etc' ? 'selected' : ''}>기타</option>
+        </select>
+        <div style="margin-top: 10px; display: flex; gap: 10px;">
+            <button class="post-btn" onclick="saveEdit('${feedId}')">저장</button>
+            <button class="action-btn" style="padding: 8px 16px;" onclick="cancelEdit('${feedId}')">취소</button>
+        </div>
+    `;
+    
+    // Replace content with edit form
+    postContent.innerHTML = '';
+    postContent.appendChild(editForm);
+    
+    // Focus on textarea
+    document.getElementById(`edit-content-${feedId}`).focus();
+}
+
+// Helper function to get feed type labels
+function getFeedTypeLabels() {
+    return {
+        'general': '일반 동향',
+        'price': '가격 변동',
+        'product': '신제품 출시',
+        'promotion': '프로모션/이벤트',
+        'review': '리뷰/고객반응',
+        'patch': '패치노트',
+        'etc': '기타'
+    };
+}
+
+// Save edit
+async function saveEdit(feedId) {
+    const newContent = document.getElementById(`edit-content-${feedId}`).value.trim();
+    const newFeedType = document.getElementById(`edit-type-${feedId}`).value;
+    
+    if (!newContent) {
+        alert('내용을 입력해주세요.');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/feeds/${feedId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                content: newContent,
+                feed_type: newFeedType
+            })
+        });
+        
+        if (response.ok) {
+            // Reload feeds
+            currentPage = 1;
+            hasMore = true;
+            await loadFeeds();
+        } else {
+            alert('수정 실패. 다시 시도해주세요.');
+        }
+    } catch (error) {
+        console.error('Error updating post:', error);
+        alert('수정 실패. 다시 시도해주세요.');
+    }
+}
+
+// Cancel edit
+function cancelEdit(feedId) {
+    // Reload feeds to restore original content
+    currentPage = 1;
+    hasMore = true;
+    loadFeeds();
+}
+</script>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include quicklinks.js for quick links functionality -->
+<script src="{{ url_for('static', filename='js/quicklinks.js') }}"></script>
+
+<!-- Mobile sidebar toggle script -->
+<script>
+function toggleMobileSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+}
+</script>
+{% endblock %}
