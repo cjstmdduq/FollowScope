@@ -109,10 +109,22 @@ def extract_product_attributes_from_csv(row, category=None):
         if option2_str:
             if is_3stage:
                 # 3-stage format: 옵션2 contains thickness/width info
-                # Pattern for "1.7cm / 80cm" format
-                simple_pattern = r'(\d+(?:\.\d+)?)\s*cm\s*/\s*(\d+)\s*cm'
-                # Pattern for "두께1.7cm / 폭80cm" format
-                korean_pattern = r'두께\s*(\d+(?:\.\d+)?)\s*cm\s*/\s*폭\s*(\d+)\s*cm'
+                # Check for folder mat patterns FIRST (폴더매트 크기 패턴)
+                folder_mat_pattern = r'(\d+)\s*[x×]\s*(\d+)'
+                folder_match = re.search(folder_mat_pattern, option2_str)
+                
+                if folder_match:
+                    # 폴더매트 크기 추출 (예: "200x200", "240x200")
+                    width = int(folder_match.group(1))
+                    length = int(folder_match.group(2))
+                    attributes['width'] = str(width)
+                    attributes['length'] = str(length)
+                    attributes['thickness'] = '0'  # 폴더매트는 두께가 없음
+                else:
+                    # Pattern for "1.7cm / 80cm" format
+                    simple_pattern = r'(\d+(?:\.\d+)?)\s*cm\s*/\s*(\d+)\s*cm'
+                    # Pattern for "두께1.7cm / 폭80cm" format
+                    korean_pattern = r'두께\s*(\d+(?:\.\d+)?)\s*cm\s*/\s*폭\s*(\d+)\s*cm'
                 # Pattern for pet mat format "6mm(폭110cm)" or "9mm(폭125cm)" - 따사룸
                 pet_pattern = r'(\d+(?:\.\d+)?)\s*mm\s*\(폭\s*(\d+)\s*cm\)'
                 # Pattern for pet mat format "6mm / 110cm" - 리포소
@@ -151,6 +163,11 @@ def extract_product_attributes_from_csv(row, category=None):
                     else:
                         attributes['thickness'] = str(value)
                 else:
+                    # Pattern for "1.7cm / 80cm" format
+                    simple_pattern = r'(\d+(?:\.\d+)?)\s*cm\s*/\s*(\d+)\s*cm'
+                    # Pattern for "두께1.7cm / 폭80cm" format
+                    korean_pattern = r'두께\s*(\d+(?:\.\d+)?)\s*cm\s*/\s*폭\s*(\d+)\s*cm'
+                    
                     # Try simple pattern
                     match = re.search(simple_pattern, option2_str)
                     if match:
@@ -170,101 +187,111 @@ def extract_product_attributes_from_csv(row, category=None):
             else:
                 # 2-stage format: 옵션2 contains size info or color/thickness combo
                 
-                # Check for puzzle mat patterns FIRST
-                # Pattern 1: "(25mm) 100x100 1장" or "(25mm) 50x50 4장" (따사룸)
-                puzzle_option2_pattern1 = r'\((\d+)mm\)\s*(\d+)x(\d+)\s*(\d+)장'
-                # Pattern 2: "100x100x3cm (1장)" or "50x50x3cm (4장)" (티지오매트)
-                puzzle_option2_pattern2 = r'(\d+)x(\d+)x(\d+(?:\.\d+)?)cm\s*\((\d+)장\)'
+                # Check for folder mat patterns FIRST (폴더매트 크기 패턴)
+                folder_mat_pattern = r'(\d+)\s*[x×]\s*(\d+)'
+                folder_match = re.search(folder_mat_pattern, option2_str)
                 
-                puzzle_match = re.search(puzzle_option2_pattern1, option2_str)
-                puzzle_match2 = re.search(puzzle_option2_pattern2, option2_str)
-                
-                if puzzle_match:
-                    # Convert mm to cm for thickness
-                    thickness_mm = float(puzzle_match.group(1))
-                    attributes['thickness'] = str(thickness_mm / 10)
-                    
-                    width = int(puzzle_match.group(2))
-                    length = int(puzzle_match.group(3))
-                    pieces = int(puzzle_match.group(4))
-                    
-                    # Normalize 50x50 4pieces to 100x100 1piece
-                    if width == 50 and length == 50 and pieces == 4:
-                        attributes['width'] = '100'
-                        attributes['length'] = '100'
-                    else:
-                        attributes['width'] = str(width)
-                        attributes['length'] = str(length)
-                elif puzzle_match2:
-                    # Pattern 2: 티지오매트 형식
-                    width = int(puzzle_match2.group(1))
-                    length = int(puzzle_match2.group(2))
-                    thickness = puzzle_match2.group(3)
-                    pieces = int(puzzle_match2.group(4))
-                    
-                    # Normalize 50x50 4pieces to 100x100 1piece
-                    if width == 50 and length == 50 and pieces == 4:
-                        attributes['width'] = '100'
-                        attributes['length'] = '100'
-                    else:
-                        attributes['width'] = str(width)
-                        attributes['length'] = str(length)
-                    attributes['thickness'] = thickness
+                if folder_match:
+                    # 폴더매트 크기 추출 (예: "200x200", "240x200")
+                    width = int(folder_match.group(1))
+                    length = int(folder_match.group(2))
+                    attributes['width'] = str(width)
+                    attributes['length'] = str(length)
+                    attributes['thickness'] = '0'  # 폴더매트는 두께가 없음
                 else:
-                    # Check for 3D dimensions (length x width x thickness)
-                    dimension_3d_pattern = r'(\d+)\s*x\s*(\d+)\s*x\s*(\d+(?:\.\d+)?)\s*cm'
-                    dim_3d_match = re.search(dimension_3d_pattern, option2_str)
-                    if dim_3d_match:
-                        # Format: length x width x thickness
-                        original_length = int(dim_3d_match.group(1))
-                        
-                        # For 리코코 long mats: break down into 50cm units for comparison
-                        if original_length >= 100:  # Only for lengths 100cm or more
-                            # Calculate how many 50cm units this represents
-                            unit_count = original_length // 50
-                            # Set length to 50cm for unit comparison, store unit count
-                            attributes['length'] = '50'
-                            attributes['unit_count'] = str(unit_count)
+                    # 퍼즐/기타 규격 패턴 체크
+                    puzzle_option2_pattern1 = r'\((\d+)mm\)\s*(\d+)x(\d+)\s*(\d+)장'
+                    puzzle_option2_pattern2 = r'(\d+)x(\d+)x(\d+(?:\.\d+)?)cm\s*\((\d+)장\)'
+
+                    puzzle_match = re.search(puzzle_option2_pattern1, option2_str)
+                    puzzle_match2 = re.search(puzzle_option2_pattern2, option2_str)
+
+                    if puzzle_match:
+                        # Convert mm to cm for thickness
+                        thickness_mm = float(puzzle_match.group(1))
+                        attributes['thickness'] = str(thickness_mm / 10)
+
+                        width = int(puzzle_match.group(2))
+                        length = int(puzzle_match.group(3))
+                        pieces = int(puzzle_match.group(4))
+
+                        # Normalize 50x50 4pieces to 100x100 1piece
+                        if width == 50 and length == 50 and pieces == 4:
+                            attributes['width'] = '100'
+                            attributes['length'] = '100'
                         else:
-                            # For shorter lengths, use as-is
-                            attributes['length'] = str(original_length)
-                        
-                        if not attributes['width']:  # Only if not already found in 옵션1
-                            attributes['width'] = dim_3d_match.group(2)
-                        if not attributes['thickness']:  # Only if not already found in 옵션1
-                            attributes['thickness'] = dim_3d_match.group(3)
+                            attributes['width'] = str(width)
+                            attributes['length'] = str(length)
+                    elif puzzle_match2:
+                        # Pattern 2: 티지오매트 형식
+                        width = int(puzzle_match2.group(1))
+                        length = int(puzzle_match2.group(2))
+                        thickness = puzzle_match2.group(3)
+                        pieces = int(puzzle_match2.group(4))
+
+                        # Normalize 50x50 4pieces to 100x100 1piece
+                        if width == 50 and length == 50 and pieces == 4:
+                            attributes['width'] = '100'
+                            attributes['length'] = '100'
+                        else:
+                            attributes['width'] = str(width)
+                            attributes['length'] = str(length)
+                        attributes['thickness'] = thickness
                     else:
-                        # Case 1: 옵션2 is 2D dimensions like "110x50", "110x100"
-                        dimension_pattern = r'(\d+)\s*x\s*(\d+)$'  # Added $ to ensure no "cm" follows
-                        dim_match = re.search(dimension_pattern, option2_str)
-                        if dim_match:
-                            # This is width x length format
+                        # Check for 3D dimensions (length x width x thickness)
+                        dimension_3d_pattern = r'(\d+)\s*x\s*(\d+)\s*x\s*(\d+(?:\.\d+)?)\s*cm'
+                        dim_3d_match = re.search(dimension_3d_pattern, option2_str)
+                        if dim_3d_match:
+                            # Format: length x width x thickness
+                            original_length = int(dim_3d_match.group(1))
+
+                            # For 리코코 long mats: break down into 50cm units for comparison
+                            if original_length >= 100:  # Only for lengths 100cm or more
+                                # Calculate how many 50cm units this represents
+                                unit_count = original_length // 50
+                                # Set length to 50cm for unit comparison, store unit count
+                                attributes['length'] = '50'
+                                attributes['unit_count'] = str(unit_count)
+                            else:
+                                # For shorter lengths, use as-is
+                                attributes['length'] = str(original_length)
+
                             if not attributes['width']:  # Only if not already found in 옵션1
-                                attributes['width'] = dim_match.group(1)
-                            attributes['length'] = dim_match.group(2)
+                                attributes['width'] = dim_3d_match.group(2)
+                            if not attributes['thickness']:  # Only if not already found in 옵션1
+                                attributes['thickness'] = dim_3d_match.group(3)
                         else:
-                            # Case 2: 옵션2 contains color/pattern and thickness info
-                            # Example: "베이지스캐터/15mm(리뉴얼)", "포쉐린/21mm(리뉴얼)"
-                            thickness_in_option2 = re.search(r'(\d+(?:\.\d+)?)\s*mm', option2_str)
-                            if thickness_in_option2:
-                                # Convert mm to cm
-                                thickness_mm = float(thickness_in_option2.group(1))
-                                attributes['thickness'] = str(thickness_mm / 10)
-                        
-                        # Case 3: 옵션2 is just width (like "100cm", "110cm")
-                        width_only_pattern = re.search(r'^(\d+)\s*cm$', option2_str)
-                        if width_only_pattern and not attributes['width']:
-                            attributes['width'] = width_only_pattern.group(1)
-                        
-                        # Extract color/pattern info for design (if not just width)
-                        if not width_only_pattern:
-                            color_pattern = re.search(r'^([^/]+)', option2_str)
-                            if color_pattern:
-                                color_info = color_pattern.group(1).strip()
-                                if attributes['design']:
-                                    attributes['design'] = f"{attributes['design']} - {color_info}"
-                                else:
-                                    attributes['design'] = color_info
+                            # Case 1: 옵션2 is 2D dimensions like "110x50", "110x100"
+                            dimension_pattern = r'(\d+)\s*x\s*(\d+)$'  # Added $ to ensure no "cm" follows
+                            dim_match = re.search(dimension_pattern, option2_str)
+                            if dim_match:
+                                # This is width x length format
+                                if not attributes['width']:  # Only if not already found in 옵션1
+                                    attributes['width'] = dim_match.group(1)
+                                attributes['length'] = dim_match.group(2)
+                            else:
+                                # Case 2: 옵션2 contains color/pattern and thickness info
+                                # Example: "베이지스캐터/15mm(리뉴얼)", "포쉐린/21mm(리뉴얼)"
+                                thickness_in_option2 = re.search(r'(\d+(?:\.\d+)?)\s*mm', option2_str)
+                                if thickness_in_option2:
+                                    # Convert mm to cm
+                                    thickness_mm = float(thickness_in_option2.group(1))
+                                    attributes['thickness'] = str(thickness_mm / 10)
+
+                                # Case 3: 옵션2 is just width (like "100cm", "110cm")
+                                width_only_pattern = re.search(r'^(\d+)\s*cm$', option2_str)
+                                if width_only_pattern and not attributes['width']:
+                                    attributes['width'] = width_only_pattern.group(1)
+
+                                # Extract color/pattern info for design (if not just width)
+                                if not width_only_pattern:
+                                    color_pattern = re.search(r'^([^/]+)', option2_str)
+                                    if color_pattern:
+                                        color_info = color_pattern.group(1).strip()
+                                        if attributes['design']:
+                                            attributes['design'] = f"{attributes['design']} - {color_info}"
+                                        else:
+                                            attributes['design'] = color_info
     
     # Extract length from 옵션3 (only for 3-stage data)
     if is_3stage and pd.notna(row.get('옵션3')):
@@ -340,9 +367,18 @@ def extract_product_attributes_from_csv(row, category=None):
                         if length_cm > 0:
                             attributes['length'] = str(length_cm)
     
-    # Extract price from 최종가격
+    # Extract price - handle both formats: 기본가격,옵션1,옵션2,옵션3,추가가격,최종가격 and 옵션1,옵션2,옵션3,추가가격,최종가격
     if pd.notna(row.get('최종가격')):
         price_str = str(row['최종가격']).replace(',', '').strip()
+        try:
+            price_val = float(price_str)
+            if price_val > 0:  # Only set if valid price
+                attributes['price'] = price_str
+        except:
+            pass
+    elif pd.notna(row.get('기본가격')):
+        # Handle format with 기본가격 column (folder mat format)
+        price_str = str(row['기본가격']).replace(',', '').strip()
         try:
             price_val = float(price_str)
             if price_val > 0:  # Only set if valid price
@@ -584,7 +620,11 @@ def process_raw_data(raw_data_path, rules):
                 # Calculate derived metrics
                 area_cm2 = width_cm * length_cm
                 volume_cm3 = thickness_cm * width_cm * length_cm
-                price_per_volume = price / volume_cm3 if volume_cm3 > 0 else None
+                if product_category == '폴더매트':
+                    # 폴더매트는 두께 정보가 없으므로 면적당 가격을 사용
+                    price_per_volume = price / area_cm2 if area_cm2 > 0 else None
+                else:
+                    price_per_volume = price / volume_cm3 if volume_cm3 > 0 else None
                 
                 # Add to data list
                 data_item = {

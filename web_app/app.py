@@ -46,17 +46,10 @@ def load_data():
     """Load and process data"""
     global df_processed, last_update
     try:
-        # Try to load combined data first (includes folder mat data)
-        combined_data_path = os.path.join(PROJECT_ROOT, 'data', 'products', 'combined_data.csv')
-        if os.path.exists(combined_data_path):
-            df_processed = pd.read_csv(combined_data_path, encoding='utf-8-sig')
-            print(f"[{datetime.now()}] Combined data loaded: {len(df_processed)} products from {df_processed['Competitor'].nunique()} competitors")
-        else:
-            # Fallback to original processing
-            df_processed = process_raw_data(PRODUCT_DATA_PATH, {})
-            print(f"[{datetime.now()}] Raw data processed: {len(df_processed)} products from {df_processed['Competitor'].nunique()} competitors")
-        
+        # Process data without predefined rules (uses dynamic rules)
+        df_processed = process_raw_data(PRODUCT_DATA_PATH, {})
         last_update = datetime.now()
+        print(f"[{last_update}] Data reloaded: {len(df_processed)} products from {df_processed['Competitor'].nunique()} competitors")
         return df_processed
     except Exception as e:
         print(f"Error loading data: {e}")

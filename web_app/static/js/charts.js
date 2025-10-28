@@ -606,6 +606,8 @@ async function updateHeatmap() {
                 return d.product_category && d.product_category.includes('퍼즐매트');
             } else if (productType === 'pet') {
                 return d.product_category && d.product_category.includes('강아지매트');
+            } else if (productType === 'folder') {
+                return d.product_category && d.product_category.includes('폴더매트');
             }
             return true;
         });
@@ -617,8 +619,8 @@ async function updateHeatmap() {
     }
 
     // Get all dimensions (no grid size filtering)
-    const uniqueThicknesses = [...new Set(allData.map(d => d.Thickness_cm))].sort((a, b) => a - b);
-    const uniqueWidths = [...new Set(allData.map(d => d.Width_cm))].sort((a, b) => a - b);
+    const uniqueThicknesses = [...new Set(displayData.map(d => d.Thickness_cm))].sort((a, b) => a - b);
+    const uniqueWidths = [...new Set(displayData.map(d => d.Width_cm))].sort((a, b) => a - b);
 
     // Always show all-competitors heatmap
     createAllCompetitorsHeatmap(displayData, uniqueThicknesses, uniqueWidths);
@@ -633,12 +635,15 @@ function createAllCompetitorsHeatmap(data, thicknesses, widths) {
     const productType = productTypeSelect ? productTypeSelect.value : 'roll';
     const isPetMat = productType === 'pet';
     const isPuzzle = productType === 'puzzle';
+    const isFolder = productType === 'folder';
     
     const title = document.createElement('h3');
     if (isPuzzle) {
         title.textContent = '전체 경쟁사 가격 비교 (100x100cm 기준)';
     } else if (isPetMat) {
         title.textContent = '전체 경쟁사 가격 비교 (110x50cm 기준)';
+    } else if (isFolder) {
+        title.textContent = '전체 경쟁사 가격 비교 (제품별 가격)';
     } else {
         title.textContent = '전체 경쟁사 가격 비교 (50cm 기준)';
     }
@@ -661,6 +666,9 @@ function createAllCompetitorsHeatmap(data, thicknesses, widths) {
         if (isPuzzle) {
             // For puzzle mats, show price as-is (already 100x100)
             displayPrice = product.Price;
+        } else if (isFolder) {
+            // 폴더매트는 제품 단위 가격을 그대로 사용
+            displayPrice = product.Price;
         } else if (isPetMat) {
             // For pet mats, show price for standard 110x50cm unit
             if (typeof calculatePetPricePerUnit === 'function') {
@@ -673,31 +681,41 @@ function createAllCompetitorsHeatmap(data, thicknesses, widths) {
             displayPrice = (product.Price / product.Length_cm) * 50;
         }
         
+        const priceMetricRaw = Number(product.Price_per_Volume);
+        const priceMetric = Number.isFinite(priceMetricRaw) ? priceMetricRaw : null;
+
         productMap[key].push({
             competitor: product.Competitor,
             displayPrice: displayPrice,
             originalPrice: product.Price,
             length: product.Length_cm,
-            pricePerVolume: product.Price_per_Volume
+            width: product.Width_cm,
+            pricePerVolume: priceMetric
         });
-        cellAverages[key].push(product.Price_per_Volume);
+        if (priceMetric !== null) {
+            cellAverages[key].push(priceMetric);
+        }
     });
     
     // Calculate average price per volume for each cell
     Object.keys(cellAverages).forEach(key => {
         const prices = cellAverages[key];
-        cellAverages[key] = prices.reduce((a, b) => a + b, 0) / prices.length;
+        cellAverages[key] = prices.length ? prices.reduce((a, b) => a + b, 0) / prices.length : null;
     });
     
     // Sort products in each cell by price
     Object.keys(productMap).forEach(key => {
-        productMap[key].sort((a, b) => a.pricePerVolume - b.pricePerVolume);
+        productMap[key].sort((a, b) => {
+            const aMetric = a.pricePerVolume !== null ? a.pricePerVolume : Infinity;
+            const bMetric = b.pricePerVolume !== null ? b.pricePerVolume : Infinity;
+            return aMetric - bMetric;
+        });
     });
     
     // Find global min/max for cell background color scale (based on cell averages)
-    const allCellAverages = Object.values(cellAverages);
-    const minCellAvg = Math.min(...allCellAverages);
-    const maxCellAvg = Math.max(...allCellAverages);
+    const allCellAverages = Object.values(cellAverages).filter(v => v !== null && Number.isFinite(v));
+    const minCellAvg = allCellAverages.length ? Math.min(...allCellAverages) : 0;
+    const maxCellAvg = allCellAverages.length ? Math.max(...allCellAverages) : 0;
     const cellAvgRange = maxCellAvg - minCellAvg;
     
     // Create table
@@ -760,62 +778,83 @@ function createAllCompetitorsHeatmap(data, thicknesses, widths) {
             if (products.length > 0) {
                 // Get cell average for background color
                 const cellAvg = cellAverages[key];
-                const cellIntensity = (cellAvg - minCellAvg) / cellAvgRange;
-                
-                // Color gradient: Green (cheap) -> Yellow -> Red (expensive)
-                let r, g, b;
-                if (cellIntensity < 0.5) {
-                    // Green to Yellow
-                    r = Math.round(255 * (cellIntensity * 2));
-                    g = 255;
-                    b = 0;
+                if (cellAvg !== null && cellAvgRange > 0) {
+                    const clampedIntensity = Math.max(0, Math.min(1, (cellAvg - minCellAvg) / cellAvgRange));
+                    // Color gradient: Green (cheap) -> Yellow -> Red (expensive)
+                    let r, g, b;
+                    if (clampedIntensity < 0.5) {
+                        // Green to Yellow
+                        r = Math.round(255 * (clampedIntensity * 2));
+                        g = 255;
+                        b = 0;
+                    } else {
+                        // Yellow to Red
+                        r = 255;
+                        g = Math.round(255 * (2 - clampedIntensity * 2));
+                        b = 0;
+                    }
+                    cell.style.backgroundColor = `rgba(${r}, ${g}, ${b}, 0.3)`;
+                } else if (cellAvg !== null) {
+                    // 동일한 가격대인 경우 중간색 사용
+                    cell.style.backgroundColor = 'rgba(255, 255, 0, 0.25)';
                 } else {
-                    // Yellow to Red
-                    r = 255;
-                    g = Math.round(255 * (2 - cellIntensity * 2));
-                    b = 0;
+                    // 가격 메트릭이 없는 경우 기본 배경
+                    cell.style.backgroundColor = '#f9fafb';
                 }
-                
-                cell.style.backgroundColor = `rgba(${r}, ${g}, ${b}, 0.3)`;
                 
                 // Create content showing all competitors with text color based on within-cell ranking
                 let cellContent = '<div style="font-size: 11px; line-height: 1.3;">';
                 
                 // Get min/max price within this cell for text color scaling
-                const cellPrices = products.map(p => p.pricePerVolume);
-                const minCellPrice = Math.min(...cellPrices);
-                const maxCellPrice = Math.max(...cellPrices);
-                const cellPriceRange = maxCellPrice - minCellPrice;
+                const cellPrices = products
+                    .map(p => p.pricePerVolume)
+                    .filter(p => p !== null && Number.isFinite(p));
+                const minCellPrice = cellPrices.length ? Math.min(...cellPrices) : null;
+                const maxCellPrice = cellPrices.length ? Math.max(...cellPrices) : null;
+                const cellPriceRange = minCellPrice !== null && maxCellPrice !== null ? maxCellPrice - minCellPrice : null;
                 
                 // Group by competitor and calculate averages
                 const competitorData = {};
                 products.forEach(product => {
                     if (!competitorData[product.competitor]) {
                         competitorData[product.competitor] = {
-                            prices50cm: [],
+                            displayPrices: [],
                             pricesPerVolume: []
                         };
                     }
-                    competitorData[product.competitor].prices50cm.push(product.displayPrice);
+                    competitorData[product.competitor].displayPrices.push(product.displayPrice);
                     competitorData[product.competitor].pricesPerVolume.push(product.pricePerVolume);
                 });
                 
                 // Calculate averages and prepare display data
-                const competitorAvgs = Object.entries(competitorData).map(([comp, data]) => ({
-                    competitor: comp,
-                    avgPrice50cm: data.prices50cm.reduce((a, b) => a + b, 0) / data.prices50cm.length,
-                    avgPricePerVolume: data.pricesPerVolume.reduce((a, b) => a + b, 0) / data.pricesPerVolume.length
-                }));
+                const competitorAvgs = Object.entries(competitorData).map(([comp, data]) => {
+                    const avgDisplayPrice = data.displayPrices.reduce((a, b) => a + b, 0) / data.displayPrices.length;
+                    const validVolume = data.pricesPerVolume.filter(v => v !== null && Number.isFinite(v));
+                    const avgPricePerVolume = validVolume.length ? validVolume.reduce((a, b) => a + b, 0) / validVolume.length : null;
+                    return {
+                        competitor: comp,
+                        avgDisplayPrice,
+                        avgPricePerVolume
+                    };
+                });
                 
                 // Sort by price per volume for display order
-                competitorAvgs.sort((a, b) => a.avgPricePerVolume - b.avgPricePerVolume);
+                competitorAvgs.sort((a, b) => {
+                    const aMetric = a.avgPricePerVolume !== null ? a.avgPricePerVolume : Infinity;
+                    const bMetric = b.avgPricePerVolume !== null ? b.avgPricePerVolume : Infinity;
+                    return aMetric - bMetric;
+                });
                 
                 // Display all competitors with color coding
                 competitorAvgs.forEach((item, idx) => {
-                    const priceStr = Math.round(item.avgPrice50cm).toLocaleString();
+                    const priceStr = Math.round(item.avgDisplayPrice).toLocaleString();
                     
                     // Calculate text color based on position within cell
-                    const pricePosition = (item.avgPricePerVolume - minCellPrice) / (cellPriceRange || 1);
+                    let pricePosition = 0.5;
+                    if (item.avgPricePerVolume !== null && minCellPrice !== null && cellPriceRange) {
+                        pricePosition = (item.avgPricePerVolume - minCellPrice) / cellPriceRange;
+                    }
+                    pricePosition = Math.max(0, Math.min(1, pricePosition));
                     let textColor;
                     if (pricePosition < 0.33) {
                         textColor = '#2563eb'; // Blue for cheap
@@ -836,11 +875,21 @@ function createAllCompetitorsHeatmap(data, thicknesses, widths) {
                 
                 // Hover tooltip with all products
                 let tooltipText = `두께: ${thickness}cm, 너비: ${width}cm\n\n`;
-                tooltipText += isPuzzle ? '100x100cm 기준 가격:\n' : '50cm 기준 가격:\n';
+                if (isPuzzle) {
+                    tooltipText += '100x100cm 기준 가격:\n';
+                } else if (isPetMat) {
+                    tooltipText += '50cm 기준 환산 가격:\n';
+                } else if (isFolder) {
+                    tooltipText += '제품 가격:\n';
+                } else {
+                    tooltipText += '50cm 기준 가격:\n';
+                }
                 products.forEach((product, idx) => {
                     tooltipText += `${idx + 1}. ${product.competitor}: ₩${Math.round(product.displayPrice).toLocaleString()} `;
-                    if (!isPuzzle) {
+                    if (!isPuzzle && !isFolder) {
                         tooltipText += `(원래: ${product.length}cm = ₩${product.originalPrice.toLocaleString()})`;
+                    } else if (isFolder) {
+                        tooltipText += `(${product.width}x${product.length}cm = ₩${product.originalPrice.toLocaleString()})`;
                     }
                     tooltipText += '\n';
                 });
