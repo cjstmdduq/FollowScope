@@ -124,8 +124,8 @@ const quickLinksData = {
                 code: "2968620816"
             },
             "크림하우스": {
-                url: "https://smartstore.naver.com/riposo-home/products/11061381895",
-                code: "11061381895"
+                url: "https://brand.naver.com/creamhaus/products/8811274212",
+                code: "8811274212"
             }
         }
     },
